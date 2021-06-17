@@ -321,9 +321,9 @@ class Wallet(models.Model):
                 if DonorAddr.objects.filter(addr=from_addr, trade_on_confirmed=True).exists():
                     donor = DonorAddr.objects.get(addr=from_addr, trade_on_confirmed=True)
                     logger.debug(f'new confirmed tx for donor: {from_addr}: {response}')
-                    # получили то, сколько чувак отдал и за что
+                    # got what the dude gave and for what
                     # params=(method,(in_token, in_amount, in_amount_slippage ),(out_token, out_amount, out_amount))
-                    # если какой то ебанутый метод, то возвращаем None, если нет, то все ок
+                    # if some kind of fucking method, then return None, if not, then everything is ok
                     self.follow(donor, gas_price, path, in_token, in_token_amount, in_token_amount_with_slippage,
                                 out_token, out_token_amount, out_token_amount_with_slippage, tx_hash,
                                 fee_support)
@@ -348,25 +348,25 @@ class Wallet(models.Model):
                         msg = f'donor tx confirmed: {tx_url}{tx_hash}\nbuy {asset.asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-             # if the donor has sold, then the message that the donor has sold
+                # if the donor has sold, then the message that the donor has sold
                 elif DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash, donor__trade_on_confirmed=False):
                         msg = f'donor tx confirmed: {tx_url}{tx_hash}\n sell {asset.asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
 
-                # эта проверка обязательно идет перед двумя следующими,
-                # проверям, что у двух ассетов эта транзакция будет у одного в покупке, у другого в продаже
-                # значит это обмен, обязательно перед, потому что оно сначала проверит, что обе совпадает, потом по одной
+                 # this check always comes before the next two,
+                 # check that two assets will have this transaction in one purchase and the other in sale
+                 # means this is an exchange, necessarily before, because it will first check that both match, then one at a time
                 elif DonorAsset.objects.filter(our_tx_hash=tx_hash).exists() and DonorAsset.objects.filter(
                         our_sell_tx_hash=tx_hash).exists():
-                    # удаляем старый
+                    # delete the old
                     asset = DonorAsset.objects.get(our_sell_tx_hash=tx_hash)
                     old_asset_addr = asset.asset.addr
                     old_asset = asset.asset
                     asset.delete()
                     self.refresh_token_balance(token_id=old_asset.id)
-                    # подтверждаем новый
+                    # confirm new
                     new_asset = DonorAsset.objects.get(our_tx_hash=tx_hash)
                     new_asset.our_confirmed = True
                     wallet = new_asset.asset.wallet
@@ -383,7 +383,7 @@ class Wallet(models.Model):
                     wallet.refresh_balances()
                     wallet.approve_if_not(new_asset.asset, gas_price)
 
-                # если наша подтвердилась на покупку, берем количество токенов из транзакции, и ставим подтверждение
+                # if our purchase is confirmed, we take the number of tokens from the transaction, and put a confirmation
                 elif DonorAsset.objects.filter(our_tx_hash=tx_hash).exists():
                     asset = DonorAsset.objects.get(our_tx_hash=tx_hash)
                     wallet = asset.asset.wallet
@@ -396,7 +396,7 @@ class Wallet(models.Model):
                     wallet.send_msg_to_subscriber_tlg(msg)
                     wallet.approve_if_not(asset.asset, gas_price)
                     wallet.refresh_balances()
-                # если наша подтвердилась на продажу, удаляем ассет, берем значение, за которое продалась, отправляем сооб
+                # if ours is confirmed for sale, delete the asset, take the value for which it was sold, send a message
                 elif DonorAsset.objects.filter(our_sell_tx_hash=tx_hash).exists():
                     asset = DonorAsset.objects.get(our_sell_tx_hash=tx_hash)
                     wallet = asset.asset.wallet
@@ -407,7 +407,7 @@ class Wallet(models.Model):
                     logger.info(msg)
                     wallet.send_msg_to_subscriber_tlg(msg)
                     wallet.refresh_balances()
-                # подтверждение аппрува
+                # approval confirmation
                 elif Asset.objects.filter(approve_tx_hash=tx_hash).exists():
                     asset = Asset.objects.get(approve_tx_hash=tx_hash)
                     wallet = asset.asset.wallet
@@ -440,39 +440,39 @@ class Wallet(models.Model):
                     logger.info(msg)
                     self.send_msg_to_subscriber_tlg(msg)
                     limit_asset.save()
-                # если мы меняем один на другой, то у двух ассетов будет эта транзакция, у одного на покупку, у другого на продажу
-                # на фэйлед удаляем новый, а в старом убираем хэш удаления
+                 # if we change one for the other, then two assets will have this transaction, one to buy, the other to sell
+                 # delete the new file on the file, and remove the delete hash in the old one
                 if DonorAsset.objects.filter(donor_tx_hash=tx_hash).exists() and DonorAsset.objects.filter(
                         donor_sell_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash):
                         msg = f'donor tx failed: {tx_url}{tx_hash}\nchange {DonorAsset.objects.get(donor_sell_tx_hash=tx_hash).asset.addr} for {DonorAsset.objects.get(donor_tx_hash=tx_hash).asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-                # если failed донор, то просто пишем в лог и сообщение, конфирмед не проставляем, типа и так ок
+                # if a failed donor, then we just write to the log and a message, we do not put the confirmation, like, and so on
                 elif DonorAsset.objects.filter(donor_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_tx_hash=tx_hash):
                         msg = f'donor tx failed: {tx_url}{tx_hash}\nbuy {DonorAsset.objects.get(donor_tx_hash=tx_hash).asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-                # если донорская не продалась, то сообщение, что у донора не продалась
+                # if the donor did not sell, then the message that the donor did not sell
                 elif DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash):
                         msg = f'donor tx failed: {tx_url}{tx_hash}\n sell {DonorAsset.objects.get(donor_sell_tx_hash=tx_hash).asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
 
-                # эта проверка обязательно идет перед двумя следующими,
-                # проверям, что у двух ассетов эта транзакция будет у одного в покупке, у другого в продаже
-                # значит это обмен, обязательно перед, потому что оно сначала проверит, что обе совпадает, потом по одной
+                 # this check always comes before the next two,
+                 # check that two assets will have this transaction in one purchase and the other in sale
+                 # means this is an exchange, necessarily before, because it will first check that both match, then one at a time
                 elif DonorAsset.objects.filter(our_tx_hash=tx_hash).exists() and DonorAsset.objects.filter(
                         our_sell_tx_hash=tx_hash).exists():
-                    # на фэйлед надо удалить новый токен, а на старом убрать тх_хэш о продаже
-                    # удаляем старый
+                     # you need to delete the new token on the filed, and remove the tx_hash about the sale on the old one
+                     # delete the old
                     asset = DonorAsset.objects.get(our_sell_tx_hash=tx_hash)
                     asset.our_sell_tx_hash = None
                     asset.save()
 
-                    # подтверждаем новый
+                    # confirm new
                     new_asset = DonorAsset.objects.get(our_tx_hash=tx_hash)
                     new_asset_addr = new_asset.asset.addr
                     new_asset.delete()
@@ -482,7 +482,7 @@ class Wallet(models.Model):
                     asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
 
 
-                # если наша провалилась на покупку, удаляем новый токен
+                # if our failed to buy, delete the new token
                 elif DonorAsset.objects.filter(our_tx_hash=tx_hash).exists():
                     asset = DonorAsset.objects.get(our_tx_hash=tx_hash)
                     asset_addr = asset.asset.addr
@@ -491,7 +491,7 @@ class Wallet(models.Model):
                     logger.info(msg)
                     asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
 
-                # если наша провалилась на продажу, удаляем у ассета тх_хэш продажи
+                # if ours failed to sell, remove the sale from the tx_hash asset
                 elif DonorAsset.objects.filter(our_sell_tx_hash=tx_hash).exists():
                     asset = DonorAsset.objects.get(our_sell_tx_hash=tx_hash)
                     asset.our_sell_tx_hash = None
@@ -499,7 +499,7 @@ class Wallet(models.Model):
                     msg = f'Our tx *failed*: {tx_url}{tx_hash}\n *sell* {asset.asset.addr}'
                     logger.info(msg)
                     asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-                # провал аппрува
+                # approval failure
                 elif Asset.objects.filter(approve_tx_hash=tx_hash).exists():
                     asset = Asset.objects.get(approve_tx_hash=tx_hash)
                     asset.approve_failed = True
