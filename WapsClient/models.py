@@ -15,7 +15,7 @@ infura_id = None
 
 try:
     # read settings
-
+    logger.info("models start....")
     addr = os.environ.get('ADDR', None)
     key = os.environ.get('KEY', None)
     infura_id = os.environ.get('INFURA_ID', None)
@@ -73,6 +73,7 @@ except Exception as ex:
 
 
 class SkipTokens(models.Model):
+    logger.info("SkipTokens...")
     name = models.CharField(max_length=128, )
     addr = models.CharField(max_length=128, unique=True)
 
@@ -82,6 +83,7 @@ class SkipTokens(models.Model):
 
 
 class DonorAddr(models.Model):
+    logger.info("DonorAddr...")
     name = models.CharField(max_length=128, )
     addr = models.CharField(max_length=128, unique=True)
     gas_multiplier = models.FloatField(null=False)
@@ -102,6 +104,7 @@ class DonorAddr(models.Model):
 
 
 class Wallet(models.Model):
+    logger.info("Wallet...")
     low_gas=models.IntegerField(null=True)
     fast_gas=models.IntegerField(null=True)
     medium_gas=models.IntegerField(null=True)
@@ -129,6 +132,7 @@ class Wallet(models.Model):
             self.follower = Uniswap(self.addr, self.key, provider=w3_test, mainnet=self.mainnet)
 
     def refresh_all_balances(self):
+        logger.info("refresh_all_balances...")
         addr_info=requests.get(f'https://api.ethplorer.io/getAddressInfo/{self.addr}?apiKey={etherplorer_api_key}').json()
         for token in addr_info.get('tokens',{}):
             asset,created = Asset.objects.get_or_create(addr=web3.Web3.toChecksumAddress(token['tokenInfo']['address']),wallet_id=self.id)
@@ -147,6 +151,7 @@ class Wallet(models.Model):
         self.refresh_balances(send_msg=False)
 
     def refresh_token_balance(self,token_id):
+        logger.info("refresh_token_balance...")
         asset=self.assets.get(id=token_id)
         token_contr=self.follower.get_erc_contract_by_addr(asset.addr)
         new_balance=token_contr.functions.balanceOf(self.addr).call()
@@ -155,6 +160,7 @@ class Wallet(models.Model):
         return new_balance
 
     def refresh_token_price(self,token_id):
+        logger.info("refresh_token_price...")
         asset=self.assets.get(id=token_id)
         new_price_for_token = self.follower.get_out_qnty_by_path(10**asset.decimals,
                                                             [asset.addr, self.follower.weth_addr, ])
@@ -162,9 +168,14 @@ class Wallet(models.Model):
         asset.save()
         return new_price_for_token
 
-
     def scan(self):
+        logger.info("Scan test...")
+        for asset in LimitAsset.objects.filter(active=True):
+            print(asset)
+            
+    def scan_ori(self):
         try:
+            logger.info("Scan...")
             for asset in LimitAsset.objects.filter(active=True):
                 # print(asset)
                 if asset.status not in ('pending','failed','executed'):
@@ -226,6 +237,7 @@ class Wallet(models.Model):
 
     def get_gas_price(self):
         try:
+            logger.info("get_gas_price...")
             self.low_gas=10*10**9
             self.medium_gas=11*10**9
             self.fast_gas=12*10**9
@@ -234,7 +246,12 @@ class Wallet(models.Model):
             logger.exception('cant get gas price')
 
     def parse_client_msg(self, msg):
-        # print(msg)
+        logger.info("parse_client_msg test...")
+        logger.info(msg)
+        
+    def parse_client_msg_ori(self, msg):
+        logger.info("parse_client_msg...")
+        logger.info(msg)
         # return
         '''
         {'tx_hash':tx_hash,'from':from_addr,'net_name':net_name,'status':response_status,
@@ -246,6 +263,7 @@ class Wallet(models.Model):
                             '''
 
         try:
+            
             try:
                 response = json.loads(json.loads(msg)['message'])
             except:
@@ -312,7 +330,7 @@ class Wallet(models.Model):
                 else:
                     logger.debug(f'new confirmed tx for addr: {from_addr}: {tx_hash}')
 
-                # если мы меняем один на другой, то у двух ассетов будет эта транзакция, у одного на покупку, у другого на продажу
+                # if we change one for the other, then two assets will have this transaction, one to buy, the other to sell
                 if DonorAsset.objects.filter(donor_tx_hash=tx_hash).exists() and DonorAsset.objects.filter(
                         donor_sell_tx_hash=tx_hash).exists():
                     new_asset = DonorAsset.objects.get(donor_tx_hash=tx_hash)
@@ -322,7 +340,7 @@ class Wallet(models.Model):
                     msg = f'donor tx confirmed: {tx_url}{tx_hash}\nchange {new_asset.asset.addr}'
                     logger.info(msg)
                     new_asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-                # если конфирмед донор, то просто пишем в лог и сообщение
+               # if a confirmed donor, then just write to the log and a message
                 elif DonorAsset.objects.filter(donor_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_tx_hash=tx_hash, donor__trade_on_confirmed=False):
                         asset.donor_confirmed = True
@@ -330,7 +348,7 @@ class Wallet(models.Model):
                         msg = f'donor tx confirmed: {tx_url}{tx_hash}\nbuy {asset.asset.addr}'
                         logger.info(msg)
                         asset.asset.wallet.send_msg_to_subscriber_tlg(msg)
-                # если донорская продалась, то сообщение, что у донора продалась
+             # if the donor has sold, then the message that the donor has sold
                 elif DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash).exists():
                     for asset in DonorAsset.objects.filter(donor_sell_tx_hash=tx_hash, donor__trade_on_confirmed=False):
                         msg = f'donor tx confirmed: {tx_url}{tx_hash}\n sell {asset.asset.addr}'
@@ -504,6 +522,7 @@ class Wallet(models.Model):
     def follow(self, donor: DonorAddr, donor_gas_price, donor_path, in_token, in_token_amount,
                in_token_amount_with_slippage, out_token, out_token_amount, out_token_amount_with_slippage, tx_hash,
                fee_support):
+        logger.info("follow...")
         if self.active == False:
             return
         if self.mainnet:
@@ -514,7 +533,7 @@ class Wallet(models.Model):
             tx_url = test_tx_url
 
         our_gas_price = int(donor_gas_price * donor.gas_multiplier)
-        # если in_token - weth, то это покупка
+        # if in_token is weth, then this is a purchase
         if in_token == weth_adr:
             if Asset.objects.filter(addr=out_token,decimals__isnull=False).exists()==False:
                 decimals=self.follower.get_erc_contract_by_addr(out_token).functions.decimals().call()
@@ -526,22 +545,22 @@ class Wallet(models.Model):
                 asset.save()
             else:
                 decimals=Asset.objects.get(addr=out_token,decimals__isnull=False).decimals
-            # проверяем, что это не какой то юсдт
+            # check that this is not some kind of yusdt
             if out_token not in [i.addr for i in self.skip_tokens.all()]:
-                # покупаем, если еще не покупали за этим донором, и проходит по фильтрам
+                # we buy, if we haven't bought for this donor yet, and passes through the filters
                 if not DonorAsset.objects.filter(asset__addr=out_token, asset__wallet=self, donor=donor).exists():
-                    # todo сделать следование в процентах от сделки
-                    # устанавливаем значение, на которое торговать
+                    # make followings as a percentage of the deal
+                    # set the value to trade
                     if donor.fixed_trade:
                         my_in_token_amount = int(donor.fixed_value_trade)
                     else:
                         my_in_token_amount = None
 
-                    # узнаем, сколько токенов за 1 эфир
+                    # find out how many tokens for 1 ether
                     # buyed_asset_out_for_one_ether = self.follower.get_out_qnty_by_path(10 ** 18, donor_path)
 
                     if in_token_amount is not None:
-                        # если за конкретное кол-во эфиров, то вот сумма сделки донора в эфирах
+                        # if for a specific number of ethers, then here is the amount of the donor's deal in ether
                         donor_eth_value = in_token_amount
                         if my_in_token_amount is None:
                             my_in_token_amount = int(donor_eth_value * donor.percent_value_trade)
@@ -553,18 +572,18 @@ class Wallet(models.Model):
 
                         my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
                     else:
-                        # если не знаем, то нужно получать цену монеты по этому пути, что он купил
-                        # но второй раз цену не нужно узнавать, когда мы уже сами будем покупать, поэтому
-                        # из этого значения приведем к нашему
+                         # if we don’t know, then we need to get the price of the coin along this path that he bought
+                         # but the second time you don't need to find out the price when we will buy ourselves, so
+                         # from this value we will lead to our
 
-                        # мы точно знаем, сколлько токенов он купил,
-                        # делим это количество на цена в эфирах за 1 токен
+                         # we know exactly how many tokens he bought,
+                         # divide this amount by the price in ether for 1 token
                         donor_eth_value = self.follower.get_in_qnty_by_path(out_token_amount, donor_path)
 
                         if my_in_token_amount is None:
                             my_in_token_amount = int(donor_eth_value * donor.percent_value_trade)
-                        # так как цену мы уже запросили за 1 эфир, приведем к тому,
-                        # сколько нам нужно, чтобы еще раз не просить
+                         # since we have already asked for the price for 1 ether, we will result in
+                         # how much do we need so as not to ask again
                         if donor.fixed_trade:
                             my_out_token_amount = int(self.follower.get_out_qnty_by_path(donor.fixed_value_trade, donor_path))
                         else:
@@ -610,7 +629,7 @@ class Wallet(models.Model):
                 msg = f'donor is buying {out_token} - skip token'
                 logger.info(msg)
                 self.send_msg_to_subscriber_tlg(msg)
-        # если out_token - weth, то продажа, а если значение out_token - юсдт..., меняем его на ветх
+        # if out_token is weth, then sale, and if out_token is yusdt ..., change it to old
         elif out_token == weth_adr or out_token in [i.addr for i in self.skip_tokens.all()]:
             if Asset.objects.filter(addr=in_token,decimals__isnull=False).exists()==False:
                 decimals=self.follower.get_erc_contract_by_addr(out_token).functions.decimals().call()
@@ -629,7 +648,7 @@ class Wallet(models.Model):
                 path = [in_token, weth_adr]
                 out_token = weth_adr
 
-            # продаем, если уже покупали за этим донором
+            # we sell if we have already bought for this donor
             if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, our_confirmed=True, donor=donor).exists():
                 my_in_token_amount = int(DonorAsset.objects.get(asset__addr=in_token, asset__wallet=self, donor=donor).qnty)
 
@@ -638,18 +657,18 @@ class Wallet(models.Model):
                 my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
 
                 if in_token_amount is not None:
-                    # если за конкретное кол-во эфиров, то вот сумма сделки донора в эфирах
+                    # if for a specific number of ethers, then here is the amount of the donor's deal in ether
                     donor_eth_value = in_token_amount
                     if donor.donor_slippage:
                         slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
                     else:
                         slippage = donor.slippage
                 else:
-                    # мы точно знаем, сколлько токенов он купил,
-                    # делим это количество на цена в эфирах за 1 токен
-                    # donor_eth_value = self.follower.get_in_qnty_by_path()
-                    # так как цену мы уже запросили за 1 эфир, приведем к тому,
-                    # сколько нам нужно, чтобы еще раз не просить
+                     # we know exactly how many tokens he bought,
+                     # divide this amount by the price in ether for 1 token
+                     # donor_eth_value = self.follower.get_in_qnty_by_path ()
+                     # since we have already asked for the price for 1 ether, we will result in
+                     # how much do we need so as not to ask again
                     if donor.donor_slippage:
                         slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
                     else:
@@ -677,7 +696,7 @@ class Wallet(models.Model):
                 logger.info(msg)
                 self.send_msg_to_subscriber_tlg(msg)
 
-        # иначе это обмен
+        # otherwise it is an exchange
         else:
             if Asset.objects.filter(addr=out_token,decimals__isnull=False).exists()==False:
                 decimals=self.follower.get_erc_contract_by_addr(out_token).functions.decimals().call()
@@ -689,7 +708,7 @@ class Wallet(models.Model):
                 asset.save()
             else:
                 decimals=Asset.objects.get(addr=out_token,decimals__isnull=False).decimals
-            # продаем, если у нас есть что продавать
+            # sell if we have something to sell
             if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, our_confirmed=True, donor=donor).exists():
                 if DonorAsset.objects.filter(asset__addr=out_token,asset__wallet=self, our_confirmed=False, donor=donor):
                     msg = f'now we are trying to buy {out_token} in another tx, so we cant change {in_token} to {out_token}, *you have to sell it manually*'
@@ -708,18 +727,18 @@ class Wallet(models.Model):
                     my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
 
                     if in_token_amount is not None:
-                        # если за конкретное кол-во эфиров, то вот сумма сделки донора в эфирах
+                        # if for a specific number of ethers, then here is the amount of the donor's deal in ether
                         donor_eth_value = in_token_amount
                         if donor.donor_slippage:
                             slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
                         else:
                             slippage = donor.slippage
                     else:
-                        # мы точно знаем, сколлько токенов он купил,
-                        # делим это количество на цена в эфирах за 1 токен
-                        # donor_eth_value = self.follower.get_out_qnty_by_path()
-                        # так как цену мы уже запросили за 1 эфир, приведем к тому,
-                        # сколько нам нужно, чтобы еще раз не просить
+                         # we know exactly how many tokens he bought,
+                         # divide this amount by the price in ether for 1 token
+                         # donor_eth_value = self.follower.get_out_qnty_by_path ()
+                         # since we have already asked for the price for 1 ether, we will result in
+                         # how much do we need so as not to ask again
                         if donor.donor_slippage:
                             slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
                         else:
@@ -731,13 +750,13 @@ class Wallet(models.Model):
                                                             gas_price=our_gas_price, fee_support=fee_support)
                     if our_tx is not None:
                         msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\n*Changing* {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {in_token}\nfor not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)} {out_token}\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
-                        # поставили на продажу старый токен
+                        # put an old token for sale
                         asset = DonorAsset.objects.get(asset__addr=in_token,asset__wallet=self, donor=donor)
                         asset.donor_sell_tx_hash = tx_hash
                         asset.our_sell_tx_hash = our_tx
                         asset.donor_confirmed = donor.trade_on_confirmed
                         asset.save()
-                        # создаем новый asset, который покупаем, либо берем существующий
+                        # create a new asset, which we buy, or take an existing one
                         new_asset, created = self.assets.get_or_create(addr=out_token)[0].donor_assets.get_or_create( donor=donor)
                         new_asset.buyed_for_addr = in_token
                         new_asset.buyed_for_qnty = my_in_token_amount
@@ -761,6 +780,7 @@ class Wallet(models.Model):
 
     def refresh_balances(self, send_msg=True):
         try:
+            logger.info("refresh_balance...")
             eth_balance, weth_balance, waps_balance = get_balances_eth_weth_waps(self.addr, self.key,
                                                                                  follower=self.follower,
                                                                                  mainnet=self.mainnet)
@@ -779,6 +799,7 @@ class Wallet(models.Model):
             return self.waps_balance, self.weth_balance, self.eth_balance
 
     def approve_if_not(self, asset, gas_price=None):
+        logger.info("approve_if_not...")
         appr_tx = None
         try:
             # всегда передаем в аргумент фолловера, ему нужно присвоить правильные ключи, чтобы он торговал с этого акка
@@ -819,13 +840,14 @@ class Wallet(models.Model):
 
     def swap_exact_token_to_token(self, donor, path: list, in_token_amount, min_out_token_amount,
                                   gas_price=None, gas=None, deadline=None, fee_support=True):
-        ''' неважно, что это, просто покупаем токены'''
+        #no matter what it is, just buy tokens
         try:
+            logger.info("swap_exact_token_to_token...")
             hex_tx=None
-            # всегда передаем в аргумент фолловера, ему нужно присвоить правильные ключи, чтобы он торговал с этого акка
+            # we always pass it to the follower argument, he needs to assign the correct keys so that he can trade from this account
 
-            # выставляем значение, на которое торгуем: если покупаем за эфир, то in_token_amount=self.fixed_value_trade
-            # иначе ошибка
+             # set the value for which we trade: if we buy for ether, then in_token_amount = self.fixed_value_trade
+             # otherwise error
 
             if self.follower.weth_addr == path[0]:
                 if int(self.weth_balance) < in_token_amount:

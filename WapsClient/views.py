@@ -56,7 +56,6 @@ def socket():
             _, signed_msg = sign_message(str(conn_msg), key)
             async with websockets.connect(uri) as ws:
 
-
                 await ws.send(json.dumps({'msg': conn_msg, "hash": signed_msg}))
                 err = False
                 while 1:
@@ -72,13 +71,13 @@ def socket():
                             if msg == 'Low balance':
                                 w.active = False
                                 w.send_msg_to_subscriber_tlg(' stopped, low balance')
-                                w.refresh_balances()
-                                w.save()
+                                # w.refresh_balances()
+                                # w.save()
                                 return
                             if msg.startswith('Failed'):
                                 w.active = False
                                 w.send_msg_to_subscriber_tlg(f' stopped, {msg}')
-                                w.save()
+                                # w.save()
                                 return
                             if msg == 'success':
                                 pass
@@ -840,8 +839,6 @@ def refresh_tokens(request):
         return JsonResponse({'non_field_errors': ['invalid key for wallet, update wallet information']}, status=400)
 
     else:
-
-        telegram_bot_sendtext("Connect wallet")
         
         assets = Asset.objects.all()
         ser = tempSer(assets, many=True)

@@ -112,10 +112,10 @@ class Uniswap():
         return int(price / (1 - slippage))
 
     def _create_exact_token_for_token_tx(self, in_token_amount, min_out_token_amount, path, deadline,fee_support=True ):
-        ''' создаем транзакцию на обмен конкретного количества токена на эфир
-        все аргументы обязательные, так как эта функция в самом низу вызовов, сюда может обрашаться только другой метод'''
+         # create a transaction to exchange a specific amount of token for ether
+         # all arguments are required, since this function is at the very bottom of the calls, only another method can be called here
 
-        # создаем транзакцию через функцию контракта роутера
+        # create a transaction through the router contract function
         if fee_support==False:
             tx = self.uni_contract.functions.swapExactTokensForTokens(int(in_token_amount), int(min_out_token_amount), path,
                                                                   self.addr,
@@ -127,10 +127,10 @@ class Uniswap():
         return tx
 
     def _create_token_for_exact_token_tx(self, max_in_token_amount, out_token_amount, path, deadline,):
-        ''' создаем транзакцию на обмен  токена на конкретное количества другого токена'''
+        # create a transaction to exchange a token for a specific amount of another token
 
 
-        # создаем транзакцию через функцию контракта роутера
+        # create a transaction through the router contract function
         tx = self.uni_contract.functions.swapTokensForExactTokens(int(out_token_amount), int(max_in_token_amount), path,
                                                                   self.addr,
                                                                   deadline, )
