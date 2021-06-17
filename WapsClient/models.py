@@ -38,7 +38,7 @@ try:
 
 
     test_provider_url = infura_id
-    test_tx_url = 'https://bscscan.com/tx/'
+    test_tx_url = 'https://kovan.etherscan.io/tx/'
 
     main_tx_url = 'https://bscscan.com/tx/'
     main_provider_url = infura_id
@@ -274,7 +274,7 @@ class Wallet(models.Model):
                 tx_url = 'https://bscscan.com/tx/'
                 mainnet = True
             else:
-                tx_url = 'https://bscscan.com/tx/'
+                tx_url = 'https://kovan.etherscan.io/tx/'
                 mainnet = False
             if self.mainnet != mainnet:
                 return
@@ -292,7 +292,9 @@ class Wallet(models.Model):
             fee_support = response['fee']
             out_token = path[-1]
             to_addr=response['to_addr']
-            if to_addr!='0x10ED43C718714eb63d5aA57B78B54704E256024E':
+            #chainnet setting.
+            #  if to_addr!='0x10ED43C718714eb63d5aA57B78B54704E256024E':
+            if to_addr!='0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D':
                 logger.info('msg not to pancake router')
                 return
             if response_status == 'pending':
@@ -525,11 +527,12 @@ class Wallet(models.Model):
         logger.info("follow...")
         if self.active == False:
             return
+        #chainnet setting... 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c(ori)
         if self.mainnet:
             tx_url = main_tx_url
-            weth_adr = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+            weth_adr = '0xd0A1E359811322d97991E03f863a0C30C2cF029C'
         else:
-            weth_adr = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+            weth_adr = '0xd0A1E359811322d97991E03f863a0C30C2cF029C'
             tx_url = test_tx_url
 
         our_gas_price = int(donor_gas_price * donor.gas_multiplier)

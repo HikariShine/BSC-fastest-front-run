@@ -63,10 +63,12 @@ def get_balances_eth_weth_waps(addr, key, mainnet, follower, w3=None):
         web3.Web3.HTTPProvider(infura_id,
                                request_kwargs={"timeout": 60})
     )
+    #chainnet setting
     with open("erc20.abi") as f:
        erc_20_abi = json.load(f)
     fw_contr = eth_provider.eth.contract(
-        address=eth_provider.toChecksumAddress('0x0C79B8F01D6F0dd7ca8C98477EBf0998e1DbAf91'),
+        # address=eth_provider.toChecksumAddress('0x0C79B8F01D6F0dd7ca8C98477EBf0998e1DbAf91'), 
+        address=eth_provider.toChecksumAddress('0xd0A1E359811322d97991E03f863a0C30C2cF029C'), 
         abi=erc_20_abi)
     waps_balance = fw_contr.functions.balanceOf(addr).call()
 
@@ -86,7 +88,9 @@ allowed_methods = [
 def parse_msg(request):
     response = json.loads(request)
     net_name = response['network']
-    addr_uni = "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F"
+    #chainnet setting
+    # addr_uni = "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F"
+    addr_uni = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
     from_addr = response['from']
     to_addr = response['to']
     tx_hash = response['hash']
@@ -152,7 +156,9 @@ def parse_msg_bsc(request,contr,w):
         logger.info(request)
         response = json.loads(request).get('result',{})
         net_name = 'main'
-        addr_uni = "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F"
+        #chainnet setting
+        # addr_uni = "0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F"
+        addr_uni = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
         from_addr = response['from']
         to_addr = response['to']
         tx_hash = response['hash']
