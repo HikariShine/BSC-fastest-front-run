@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import Image from '../../elements/Image';
 
-const Logo = ({
+const LogoHeader = ({
   className,
   ...props
 }) => {
@@ -21,9 +21,9 @@ const Logo = ({
       <h1 className="m-0">
         <a href="http://localhost:8000">
           <Image
-            src={require('./../../../assets/images/1.png')}
+            src={require('./../../../assets/images/bitcoin3.jpg')}
             alt="Open"
-            width={256}
+            width={200}
             height={32} />
         </a>
       </h1>
@@ -31,4 +31,4 @@ const Logo = ({
   );
 }
 
-export default Logo;
+export default LogoHeader;

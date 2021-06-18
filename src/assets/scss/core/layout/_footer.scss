@@ -40,6 +40,15 @@
 		margin-bottom: ($footer-block--padding_v / 2);
 	}
 }
+.footer-layout{
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.footer-copyright{
+	padding-left: 150px;
+}
 
 .footer-block {
 	flex-grow: 1;

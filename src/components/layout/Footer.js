@@ -39,14 +39,14 @@ const Footer = ({
             'site-footer-inner',
             topDivider && 'has-top-divider'
           )}>
-          <div className="footer-top space-between text-xxs">
+          <div className="footer-top footer-layout">
             <Logo />
-            <FooterSocial />
+            <div className="footer-bottom space-between invert-order-desktop pl-16">
+              <FooterNav />
+              <div className="footer-copyright text-xs">C O P Y R I G H T &nbsp; © &nbsp;   {new Date().getFullYear()}  <a href="http://localhost:8000">&nbsp; J a s o n&nbsp; </a>&nbsp; A l l &nbsp; R i g h t&nbsp;&nbsp;&nbsp;    r e s e r v e d</div>
+            </div>   
           </div>
-          <div className="footer-bottom space-between text-xxs invert-order-desktop">
-            <FooterNav />
-            <div className="footer-copyright">Made by <a href="https://followswaps.com">followswaps</a>. All right reserved</div>
-          </div>
+
         </div>
       </div>
     </footer>

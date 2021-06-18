@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import Logo from './partials/Logo';
+import LogoHeader from './partials/LogoHeader';
 import AnchorLink from 'react-anchor-link-smooth-scroll'
 const propTypes = {
   navPosition: PropTypes.string,
@@ -85,7 +86,7 @@ const HeaderApp = ({
             'site-header-inner',
             bottomDivider && 'has-bottom-divider'
           )}>
-          <Logo />
+          <LogoHeader />
           {!hideNav &&
             <>
               <button
@@ -112,7 +113,7 @@ const HeaderApp = ({
                       navPosition && `header-nav-${navPosition}`
                     )} style={{justifyContent: 'space-around'}}>
                     <li >
-                      <a href="https://followswaps.com" onClick={closeMenu}>FollowSwaps site</a>
+                      <a href="http://localhost:8000" onClick={closeMenu}>The goal of a successful trader is to make the best trades.e</a>
                     </li>
 
 

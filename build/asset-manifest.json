@@ -1,19 +1,20 @@
 {
   "files": {
-    "main.css": "/static/css/main.1ea3981e.chunk.css",
-    "main.js": "/static/js/main.8eb20c9b.chunk.js",
+    "main.css": "/static/css/main.1399eb67.chunk.css",
+    "main.js": "/static/js/main.7cedcdf6.chunk.js",
     "runtime-main.js": "/static/js/runtime-main.64e10b9a.js",
     "static/css/2.d71d4835.chunk.css": "/static/css/2.d71d4835.chunk.css",
-    "static/js/2.fe2d036e.chunk.js": "/static/js/2.fe2d036e.chunk.js",
+    "static/js/2.0ab44233.chunk.js": "/static/js/2.0ab44233.chunk.js",
     "index.html": "/index.html",
-    "precache-manifest.57af6c998155f3b5e78af32bb5645fff.js": "/precache-manifest.57af6c998155f3b5e78af32bb5645fff.js",
+    "precache-manifest.bdb03892893623067d08d0b46637e3af.js": "/precache-manifest.bdb03892893623067d08d0b46637e3af.js",
     "service-worker.js": "/service-worker.js",
-    "static/js/2.fe2d036e.chunk.js.LICENSE.txt": "/static/js/2.fe2d036e.chunk.js.LICENSE.txt",
-    "static/media/1.png": "/static/media/1.0e4fd1f8.png",
+    "static/js/2.0ab44233.chunk.js.LICENSE.txt": "/static/js/2.0ab44233.chunk.js.LICENSE.txt",
+    "static/media/1.png": "/static/media/1.d70eaeaf.png",
     "static/media/349436591579680320.svg": "/static/media/349436591579680320.c7decc35.svg",
     "static/media/Vector.48f1aa70.svg": "/static/media/Vector.48f1aa70.svg",
     "static/media/account_balance_wallet.afaf825a.svg": "/static/media/account_balance_wallet.afaf825a.svg",
     "static/media/autorenew.563137d2.svg": "/static/media/autorenew.563137d2.svg",
+    "static/media/bitcoin3.jpg": "/static/media/bitcoin3.f87e2cfb.jpg",
     "static/media/semantic.min.css": "/static/media/outline-icons.ef60a4f6.woff",
     "static/media/chart.svg": "/static/media/chart.329aca32.svg",
     "static/media/coin.svg": "/static/media/coin.ca5f5e3d.svg",
@@ -26,7 +27,6 @@
     "static/media/feature-tile-icon-06.svg": "/static/media/feature-tile-icon-06.945f7dee.svg",
     "static/media/glob.svg": "/static/media/glob.0e1e4e64.svg",
     "static/media/hand2.svg": "/static/media/hand2.e4849160.svg",
-    "static/media/image 1.svg": "/static/media/image 1.ee2b090e.svg",
     "static/media/App.css": "/static/media/img.c1cd8b98.png",
     "static/media/info.b16f4e30.svg": "/static/media/info.b16f4e30.svg",
     "static/media/more_vert.155bae02.svg": "/static/media/more_vert.155bae02.svg",
@@ -36,8 +36,8 @@
   "entrypoints": [
     "static/js/runtime-main.64e10b9a.js",
     "static/css/2.d71d4835.chunk.css",
-    "static/js/2.fe2d036e.chunk.js",
-    "static/css/main.1ea3981e.chunk.css",
-    "static/js/main.8eb20c9b.chunk.js"
+    "static/js/2.0ab44233.chunk.js",
+    "static/css/main.1399eb67.chunk.css",
+    "static/js/main.7cedcdf6.chunk.js"
   ]
 }

@@ -4,6 +4,8 @@ import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 import Logo from './partials/Logo';
 import AnchorLink from 'react-anchor-link-smooth-scroll'
+import LogoHeader from './partials/LogoHeader';
+
 const propTypes = {
   navPosition: PropTypes.string,
   hideNav: PropTypes.bool,
@@ -85,7 +87,7 @@ const Header = ({
             'site-header-inner',
             bottomDivider && 'has-bottom-divider'
           )}>
-          <Logo />
+          <LogoHeader />
           {!hideNav &&
             <>
               <button

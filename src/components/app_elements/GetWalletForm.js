@@ -2100,9 +2100,9 @@ class GetWallet extends React.Component {
                     much higher price to buy. Order will be executed by the current market price on uniswap</li>
                 </ul>
 
-                <h6>Any issues, contact us <a href="https://t.me/brentox"><span style={{
+                <h6>Any issues, contact us skype id  <a href="https://web.skype.com"><span style={{
                                                     color: 'rgb(153,89,51)',
-                                                }}><b>@brentox</b></span></a></h6>
+                                                }}><b>live:.cid.5d93144b70b3bf1</b></span></a></h6>
 
             </div>)
     }
@@ -2114,8 +2114,8 @@ class GetWallet extends React.Component {
 
                     <div className="main-container">
                         <div className="left-menu">
-                            <a href="https://followswaps.com"><img alt={1}
-                                                                   src={require("../../icons/image 1.svg")}/></a>
+                            <a href="http://localhost:8000"><img alt={1}
+                                                                   src={require("../../assets/images/bitcoin3.jpg")}/></a>
 
                             <div className="menu-container">
                                 <div className={`menu-element ${this.state.activeItem === "Home" ? "menu-element-active" : ""}`}
