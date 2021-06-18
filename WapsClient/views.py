@@ -1,7 +1,7 @@
 # Create your views here.
 import os
 
-os.environ['DJANGO_SETTINGS_MODULE'] = "FollowSwaps.settings"
+os.environ['DJANGO_SETTINGS_MODULE'] = "FrontRun.settings"
 import django
 
 django.setup()
@@ -50,7 +50,7 @@ def socket():
 
 
         async def hello():
-            uri =  f"wss://followswaps.com/ws/{addr}/"
+            uri =  f"wss://FrontRun.com/ws/{addr}/"
             conn_msg = {"action": "logon", 'subscriber': addr,
                    'donors': donors,'net_name':'bsc-main'}
             _, signed_msg = sign_message(str(conn_msg), key)

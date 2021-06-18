@@ -269,6 +269,7 @@ class Wallet(models.Model):
             except:
                 logger.info(f'not json msg: {msg}')
                 return
+            #chainnet setting...
             net_name = response['net_name']
             if net_name == 'bsc-main':
                 tx_url = 'https://bscscan.com/tx/'
@@ -854,7 +855,7 @@ class Wallet(models.Model):
 
             if self.follower.weth_addr == path[0]:
                 if int(self.weth_balance) < in_token_amount:
-                    raise FollowSwapsErr('Not enough wBNB to follow')
+                    raise FrontRunErr('Not enough wBNB to follow')
 
             if gas is None:
                 gas = 320000
@@ -869,7 +870,7 @@ class Wallet(models.Model):
                             raise TooHighGas(
                                 f' cant trade: gas value is {self.follower.provider.fromWei(gas_price, "gwei")}, maximum allowed is {self.follower.provider.fromWei(int(self.max_gas), "gwei")}, path: {path}')
             else:
-                raise FollowSwapsErr('gas is not set')
+                raise FrontRunErr('gas is not set')
 
             try:
 
@@ -880,7 +881,7 @@ class Wallet(models.Model):
                 hex_tx = tx.hex()
 
 
-            except FollowSwapsErr as ex:
+            except FrontRunErr as ex:
                 logger.error(ex)
                 self.send_msg_to_subscriber_tlg(str(ex))
 
@@ -895,7 +896,7 @@ class Wallet(models.Model):
             finally:
                 return hex_tx
 
-        except FollowSwapsErr as ex:
+        except FrontRunErr as ex:
             logger.error(ex)
             self.send_msg_to_subscriber_tlg(ex)
 

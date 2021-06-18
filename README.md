@@ -1,10 +1,10 @@
-1)go to followswaps folder and open file settings to enter keys and infura id
+1)go to FrontRun folder and open file settings to enter keys and infura id
 
 2)open cmd
 
 3)type our folder location:
 
-      cd c:\Users\file location\Desktop\FollowSwaps
+      cd c:\Users\file location\Desktop\FrontRun
 
 4) copy/past this command:
 

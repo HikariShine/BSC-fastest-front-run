@@ -1,14 +1,14 @@
 
-class FollowSwapsErr(Exception):
+class FrontRunErr(Exception):
     pass
 
 
 
-class FeatureNotReady(FollowSwapsErr):
+class FeatureNotReady(FrontRunErr):
     pass
 
-class TooHighGas(FollowSwapsErr):
+class TooHighGas(FrontRunErr):
     pass
 
-class LowBalance(FollowSwapsErr):
+class LowBalance(FrontRunErr):
     pass

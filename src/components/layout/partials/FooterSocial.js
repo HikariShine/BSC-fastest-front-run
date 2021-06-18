@@ -18,7 +18,7 @@ const FooterSocial = ({
         >
             <ul className="list-reset">
                 Chat <li>
-                     <a href="https://t.me/FollowSwaps_CHAT">
+                     <a href="https://t.me/FrontRun_CHAT">
                         <svg
                             width="16"
                             height="16"
@@ -68,7 +68,7 @@ const FooterSocial = ({
                         </svg>
                     </a>
                 </li>Announcements <li>
-                     <a href="https://t.me/FollowSwaps_INFO">
+                     <a href="https://t.me/FrontRun_INFO">
                         <svg
                             width="16"
                             height="16"

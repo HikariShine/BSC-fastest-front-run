@@ -2,7 +2,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-logger = logging.getLogger('FollowSwaps')
+logger = logging.getLogger('FrontRun')
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
