@@ -2073,7 +2073,6 @@ class GetWallet extends React.Component {
                 <h5>Tab "Donor"</h5>
                 <ul>
                     <li>Add a new donor to copy-trade or front-run.</li>
-                    <li>You need to have 20 bWAPS.</li>
                     <li>We suggest using donor slippage.</li>
                 </ul>
                 <h5>Tab "Blacklist"</h5>
@@ -2148,8 +2147,8 @@ class GetWallet extends React.Component {
                         <div className="body-wrapper">
                             <div className="body-header">
                                 <span className="header-text">
-                                    bWAPS balance: {(this.state.waps_balance / 10 ** 18).toFixed(5)}
-                                    &nbsp; &nbsp;
+                                    {/* bWAPS balance: {(this.state.waps_balance / 10 ** 18).toFixed(5)}
+                                    &nbsp; &nbsp; */}
                                     WBNB balance: {(this.state.weth_balance / 10 ** 18).toFixed(5)}
                                     &nbsp; &nbsp;
                                     BNB balance: {(this.state.eth_balance / 10 ** 18).toFixed(5)}
