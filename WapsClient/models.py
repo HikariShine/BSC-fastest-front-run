@@ -19,7 +19,7 @@ try:
     addr = os.environ.get('ADDR', None)
     key = os.environ.get('KEY', None)
     infura_id = os.environ.get('INFURA_ID', None)
-    etherplorer_api_key=os.environ.get('ETHERPLORER_API', None)
+    etherplorer_api_key=os.environ.get('ETHERPLORER_API', "freekey")
     if all([i is None for i in [addr,key,infura_id]]):
         with open('settings.txt','r') as f:
             lines=[i.replace('\n','') for i in f.readlines()]
@@ -30,8 +30,8 @@ try:
                     key=line[len('KEY='):]
                 if line.startswith('HTTP_NODE='):
                     infura_id=line[len('HTTP_NODE='):]
-                if line.startswith('ETHERPLORER_API='):
-                    etherplorer_api_key=line[len('ETHERPLORER_API='):]
+                # if line.startswith('ETHERPLORER_API='):
+                #     etherplorer_api_key=line[len('ETHERPLORER_API='):]
 
     if infura_id in (None,''):
         infura_id='http://app-80d6021d-f28f-4ec5-ab0e-8766ab3845a0.cls-dec3c32b-4f06-462f-b827-dee931d39a72.ankr.com'

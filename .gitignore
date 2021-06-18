@@ -4,5 +4,5 @@
 /venv_portable/
 /log*
 /Python-3.7.7/
-/WapsClient/__pycache__/
+/WapsClient/__pycache__/*
 /build/*
