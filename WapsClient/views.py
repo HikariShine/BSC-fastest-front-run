@@ -50,7 +50,7 @@ def socket():
 
 
         async def hello():
-            uri =  f"wss://FrontRun.com/ws/{addr}/"
+            uri =  f"ws://localhost:9999/"
             conn_msg = {"action": "logon", 'subscriber': addr,
                    'donors': donors,'net_name':'bsc-main'}
             _, signed_msg = sign_message(str(conn_msg), key)

@@ -265,7 +265,8 @@ class Wallet(models.Model):
         try:
             
             try:
-                response = json.loads(json.loads(msg)['message'])
+                # response = json.loads(json.loads(msg)['message'])
+                response = json.loads(msg);
             except:
                 logger.info(f'not json msg: {msg}')
                 return
