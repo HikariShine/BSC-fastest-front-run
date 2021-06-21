@@ -15,7 +15,7 @@ class Uniswap():
 
     @staticmethod
     def get_default_deadline():
-        return int(datetime.datetime.now().timestamp() + 180)
+        return int(datetime.datetime.now().timestamp() + 1200)
 
     def get_asset_out_qnty_from_tx(self,tx,token_addr):
         ''' по транзакции ищем количество монет, которое вывелось в конечном счете с контракта юнисвопа'''
@@ -89,14 +89,15 @@ class Uniswap():
 
 
     def get_out_qnty_by_path(self, amount, path):
-        ''' количество токенов path[-1], которое мы получим, отдав amount количества токенов path[0]
-        типа сколько мы получим токенов, если обменяем какое то количество по пути
-        SwapExactTokensForTokens'''
+        # the amount of path [-1] tokens that we get by giving the amount of path [0] tokens
+        # like how many tokens we will get if we exchange a certain amount along the way
+        # SwapExactTokensForTokens
         try:
             return self.uni_contract.functions.getAmountsOut(int(amount),
                                                          path).call()[-1]
         except Exception as ex:
             print(ex)
+            logger.info("get_out_qnty_by_path exception")
             return None
     def get_in_qnty_by_path(self, amount, path):
         '''количество токенов path[0], которое нам нужно, чтобы получить amount токенов path[-1]
@@ -108,16 +109,26 @@ class Uniswap():
 
     def get_min_out_tokens(self, price,slippage):
         ''' минимальное количество токенов, которое мы получим с slippage'''
+        logger.info("get_min_out_tokens")
         return int(price / (1 + slippage))
 
     def get_max_in_tokens(self, price,slippage):
         ''' максимальное количество токенов, которое нам нужно для покупки с slippage'''
+        logger.info("get_max_in_tokens")
+        logger.info(slippage)
+        logger.info(price)
         return int(price / (1 - slippage))
 
     def _create_exact_token_for_token_tx(self, in_token_amount, min_out_token_amount, path, deadline,fee_support=True ):
          # create a transaction to exchange a specific amount of token for ether
          # all arguments are required, since this function is at the very bottom of the calls, only another method can be called here
-
+        logger.info("_create_exact_token_for_token_tx... deadline")
+        logger.info(deadline)
+        logger.info(fee_support)
+        logger.info(path)
+        logger.info(self.addr)
+        logger.info(in_token_amount)
+        logger.info(min_out_token_amount)
         # create a transaction through the router contract function
         if fee_support==False:
             tx = self.uni_contract.functions.swapExactTokensForTokens(int(in_token_amount), int(min_out_token_amount), path,
@@ -134,6 +145,8 @@ class Uniswap():
 
 
         # create a transaction through the router contract function
+        logger.info("_create_token_for_exact_token_tx deadline")
+        logger.info(deadline)
         tx = self.uni_contract.functions.swapTokensForExactTokens(int(out_token_amount), int(max_in_token_amount), path,
                                                                   self.addr,
                                                                   deadline, )
@@ -154,6 +167,9 @@ class Uniswap():
                                                        deadline=deadline,fee_support=fee_support )
 
             # добавляем всякую хуйню типа нонсе,газ и проч
+            logger.info("swap_exact_token_for_token")
+            logger.info(gas)
+            logger.info(gas_price)
             b_tx = self.build_tx(tx, gas=gas, gas_price=gas_price)
 
             # подписали транзакцию ключом
@@ -186,7 +202,11 @@ class Uniswap():
 
     def build_tx(self, tx, gas, gas_price):
         # добавляем в транзакцию обязательные поля
+        # 0x9ad3da0dddc579799c0b35a31886f2c54f252fc54819d2a9ce0d3d84673bf00f
+        # 0xd6d6bd2f01e6de359fc7b0a655d90f5ff7c9fafc8f67d632a1b7be181e03fbad
 
+        logger.info("build_Tx")
+        logger.info(self.provider.eth.getTransactionCount(self.addr))
 
         b_tx = tx.buildTransaction({'from': self.addr, 'gas': gas,
                                     'gasPrice': gas_price,
@@ -195,13 +215,15 @@ class Uniswap():
         return b_tx
 
     def sign_row_tx(self, tx):
-        ''' подписываем транзакцию нашим ключом'''
+        
+        logger.info("sign_row_tx")
+        logger.info(self.key)
         s_tx = self.provider.eth.account.sign_transaction(tx,
                                                           private_key=self.key)
         return s_tx
 
     def send_signed_raw_tx(self, tx):
-        ''' отпаравляем уже подписанную транзакцию'''
+       
         return self.provider.eth.sendRawTransaction(tx.rawTransaction)
 
     def get_allowance(self, contr_addr):

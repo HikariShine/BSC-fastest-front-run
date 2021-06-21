@@ -16,8 +16,13 @@ var responseJson;
 
 //chainnet setting...
 
-const web3 = new Web3(new Web3.providers.HttpProvider('https://kovan.infura.io/ws/v3/8827667c483640e699955a604e6280e4'));
+const web3 = new Web3(new Web3.providers.HttpProvider('https://kovan.infura.io/v3/8827667c483640e699955a604e6280e4'));
 const web3Ws = new Web3(new Web3.providers.WebsocketProvider('wss://kovan.infura.io/ws/v3/8827667c483640e699955a604e6280e4'));
+
+const sleep = (milliseconds) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+  }
+
 
 console.log('listen Pending transaction...');
 wsServer.on('request', function(request) {
@@ -25,56 +30,59 @@ wsServer.on('request', function(request) {
     connection.on('message', function(message) {
       console.log('Received Message:', message.utf8Data);
       donors = getDonors(message.utf8Data);
-    //   connection.sendUTF('Low Balance');
-    web3Ws.eth
-      .subscribe("pendingTransactions", function(error, result) {})
-      .on("data", async function(transactionHash) {
-        console.log(transactionHash);
-        let transaction = await web3.eth.getTransaction(transactionHash);
-        let data = await handleTransaction(transaction);
+      connection.sendUTF(getSellTestResponse());
 
-        if (data != null) {
-            //chainnet setting...
-            params = data[1];
-            response['net_name']  =  "kovan test";
-            response['fee']       =   true; 
-            response['tx_hash']   =   transactionHash;       
-            response['from']      =   transaction['from'];
-            response['to_addr']   =   transaction['to'];
-            response['gas']       =   transaction['gas'];
-            response['gas_price'] =   transaction['gas_price'];
-            response['path'][0]   =   params[0];   //in_token
-            response['path'][-1]  =   params[2];   //out_token
-            response['method']    =   data[0]; 
-            response['status']    =   "pending";  
-            response['in_token_amount'] =   params[1];
-            response['in_token_amount_with_slippage'] =  params[1] * 0.95;
-            response['out_token_amount'] =  params[3];
-            response['out_token_amount_with_slippage'] = params[3] * 0.95;
+    // web3Ws.eth
+    //   .subscribe("pendingTransactions", function(error, result) {})
+    //   .on("data", async function(transactionHash) {
+    
+    //     let transaction = await web3Ws.eth.getTransaction(transactionHash);
+    //     let data = await handleTransaction(transaction);
 
-            // parse json string ...
-            // responseJson = 
-            console.log(response);
-            connection.sendUTF(response);
+    //     if (data != null) {
+    //         //chainnet setting...
+    //         params = data[1];
+    //         response['net_name']  =  "kovan test";
+    //         response['fee']       =   true; 
+    //         response['tx_hash']   =   transactionHash;       
+    //         response['from']      =   transaction['from'];
+    //         response['to_addr']   =   transaction['to'];
+    //         response['gas']       =   transaction['gas'];
+    //         response['gas_price'] =   transaction['gas_price'];
+    //         response['path'] = [];
+    //         response['path'][0]   =   params[0];   //in_token
+    //         response['path'][-1]  =   params[1];   //out_token
+    //         response['method']    =   data[0]; 
+    //         response['status']    =   "pending";  
+    //         response['in_token_amount'] =   params[5];
+    //         response['in_token_amount_with_slippage'] =  params[5] * 0.95;
+    //         response['out_token_amount'] =  params[6];
+    //         response['out_token_amount_with_slippage'] = params[6] * 0.95;
 
-            while (await isPending(transaction['hash'])) { }
+    //         // parse json string ...
+    //         responseJson = JSON.stringify(response);
+    //         console.log(responseJson);
+    //         connection.sendUTF(responseJson);
 
-            response['path'][0]   =   params[2];   //in_token
-            response['path'][-1]  =   params[0];   //out_token
-            response['method']    =   data[0]; 
-            response['status']    =   "confirmed";  
-            response['in_token_amount'] =   params[3];
-            response['in_token_amount_with_slippage'] =  params[3] * 0.95;
-            response['out_token_amount'] =  params[1];
-            response['out_token_amount_with_slippage'] = params[1] * 0.95;
+    //         while (await isPending(transaction['hash'])) { }
+    //         await sleep(1000);
 
-             // parse json string ...
-            // responseJson = 
-            console.log(response);
-            connection.sendUTF(response);
+    //         response['path'][0]   =   params[1];   //in_token
+    //         response['path'][-1]  =   params[0];   //out_token
+    //         response['method']    =   data[0]; 
+    //         response['status']    =   "confirmed";  
+    //         response['in_token_amount'] =   params[6];
+    //         response['in_token_amount_with_slippage'] =  params[6] * 0.95;
+    //         response['out_token_amount'] =  params[5];
+    //         response['out_token_amount_with_slippage'] = params[5] * 0.95;
 
-        }
-      });
+    //          // parse json string ...
+    //          responseJson = JSON.stringify(response);
+    //          console.log(responseJson);
+    //          connection.sendUTF(responseJson);
+
+    //     }
+    //   });
 
     });
     connection.on('close', function(reasonCode, description) {
@@ -82,19 +90,11 @@ wsServer.on('request', function(request) {
     });
 });
 
-
-async function getQuoteAmount(srcToken, destToken, srcQty) {
-    // let quoteAmountRequest = await fetch(`${NETWORK_URL}/quote_amount?base=${srcToken}&quote=${destToken}&base_amount=${srcQty}&type=sell`)
-    // let quoteAmount = await quoteAmountRequest.json();
-    // quoteAmount = quoteAmount.data;
-    // return quoteAmount * 0.97;
-}
-
-
 async function handleTransaction(transaction) {
-    console.log(transaction);
-    if (donors.includes(transaction['from'] ) && await isPending(transaction['hash'])) {
+    // console.log(transaction);
+    if (transaction != null && donors.includes(transaction['from'] ) ) {
         console.log("Found pending transaction", transaction);
+        console.log("pending: ", await isPending(transaction['hash']));
     } else {
         return null;
     }
@@ -103,6 +103,65 @@ async function handleTransaction(transaction) {
     return data;
 
 }
+
+function getBuyTestResponse(){
+
+    response['net_name']  =  "kovan test";
+    response['fee']       =   false; 
+    response['tx_hash']   =   "0x7fbf5393b663ac4939082822ca295cb1ae03badff1ec81c7f2a38ca30d3a0df0";       
+    response['from']      =   Web3.utils.toChecksumAddress("0xa430dcf42247f2d3b0af1553f5cc7ca309a70580");
+    response['to_addr']   =   Web3.utils.toChecksumAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+    response['gas']       =   161010;
+    response['gas_price'] =   6 * 10 ** 9;
+    response['path'] = [];
+    response['path'][0]   =   	Web3.utils.toChecksumAddress("0xd0A1E359811322d97991E03f863a0C30C2cF029C");   //in_token
+    response['path'][1]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //out_token zeenus
+    response['method']    =     0x414bf389; 
+    response['status']    =   "pending";  
+    response['in_token_amount'] =   99909606059852675;
+    response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+    response['out_token_amount'] =  68887863015930451983;
+    response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+
+    // parse json string ...
+    responseJson = JSON.stringify(Object.assign({}, response));
+
+    console.log(response);
+    console.log(responseJson);
+
+    return responseJson;
+}
+
+function getSellTestResponse(){
+
+    response['net_name']  =  "kovan test";
+    response['fee']       =   false; 
+    response['tx_hash']   =   "0xd6d6bd2f01e6de359fc7b0a655d90f5ff7c9fafc8f67d632a1b7be181e03fbad";       
+    response['from']      =   Web3.utils.toChecksumAddress("0xa430dcf42247f2d3b0af1553f5cc7ca309a70580");
+    response['to_addr']   =   Web3.utils.toChecksumAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+    response['gas']       =   161010;
+    response['gas_price'] =   6 * 10 ** 9;
+    response['path'] = [];
+    response['path'][1]   =   	Web3.utils.toChecksumAddress("0xd0A1E359811322d97991E03f863a0C30C2cF029C");   //out_token weth
+    response['path'][0]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //in zeenus
+    response['method']    =     0x414bf389; 
+    response['status']    =   "pending";  
+    response['in_token_amount'] =   68887863015930451983;
+    response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+    response['out_token_amount'] =  99909606059852675;
+    response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+
+
+    // parse json string ...
+    responseJson = JSON.stringify(Object.assign({}, response));
+
+    console.log(response);
+    console.log(responseJson);
+
+    return responseJson;
+}
+
+
 
 async function isPending(transactionHash) {
     return await web3.eth.getTransactionReceipt(transactionHash) == null;
@@ -119,11 +178,22 @@ function parseTx(input) {
     let numParams = (input.length - 8 - 2) / 64;
     var params = [];
     for (let i = 0; i < numParams; i += 1) {
-        let param = parseInt(input.substring(10 + 64 * i, 10 + 64 * (i + 1)), 16);
+        let param;
+        param = parseInt(input.substring(10 + 64 * i, 10 + 64 * (i + 1)), 16);
+        if (i === 5 || i === 6 ) {
+            // param = parseInt(param, 10);
+        }
         params.push(param);
     }
     return [method, params]
 }
+
+function getDonors(message) {
+    var string = String(message);
+    var parseObj = JSON.parse(string);
+    var donors = parseObj['msg']['donors'];
+    return donors;
+ }
 
 
 async function logSave(message) {
@@ -145,11 +215,11 @@ function getHash(stringValue) {
     return objectValue['from'];
  }
 
- function getDonors(message) {
-    var string = String(message);
-    var parseObj = JSON.parse(string);
-    var donors = parseObj['msg']['donors'];
-    return donors;
- }
+ async function getQuoteAmount(srcToken, destToken, srcQty) {
+    // let quoteAmountRequest = await fetch(`${NETWORK_URL}/quote_amount?base=${srcToken}&quote=${destToken}&base_amount=${srcQty}&type=sell`)
+    // let quoteAmount = await quoteAmountRequest.json();
+    // quoteAmount = quoteAmount.data;
+    // return quoteAmount * 0.97;
+}
 
 

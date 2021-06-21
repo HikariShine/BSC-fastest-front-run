@@ -40,7 +40,8 @@ try:
     test_provider_url = infura_id
     test_tx_url = 'https://kovan.etherscan.io/tx/'
 
-    main_tx_url = 'https://bscscan.com/tx/'
+    # main_tx_url = 'https://bscscan.com/tx/'
+    main_tx_url = 'https://kovan.etherscan.io/tx/'
     main_provider_url = infura_id
 
     # connect to infura
@@ -244,12 +245,8 @@ class Wallet(models.Model):
             self.save()
         except:
             logger.exception('cant get gas price')
-
-    def parse_client_msg(self, msg):
-        logger.info("parse_client_msg test...")
-        logger.info(msg)
         
-    def parse_client_msg_ori(self, msg):
+    def parse_client_msg(self, msg):
         logger.info("parse_client_msg...")
         logger.info(msg)
         # return
@@ -273,13 +270,14 @@ class Wallet(models.Model):
             #chainnet setting...
             net_name = response['net_name']
             if net_name == 'bsc-main':
-                tx_url = 'https://bscscan.com/tx/'
+                # tx_url = 'https://bscscan.com/tx/'
+                tx_url = 'https://kovan.etherscan.io/tx/'
                 mainnet = True
             else:
                 tx_url = 'https://kovan.etherscan.io/tx/'
                 mainnet = False
-            if self.mainnet != mainnet:
-                return
+            # if self.mainnet != mainnet:
+            #     return
             from_addr = response['from']
             tx_hash = response['tx_hash']
             path = response['path']
@@ -292,17 +290,22 @@ class Wallet(models.Model):
             out_token_amount = response['out_token_amount']
             out_token_amount_with_slippage = response['out_token_amount_with_slippage']
             fee_support = response['fee']
-            out_token = path[-1]
+            out_token = path[1]
             to_addr=response['to_addr']
+            
+            logger.info("out_token_address")
+            logger.info(out_token);
             #chainnet setting.
             #  if to_addr!='0x10ED43C718714eb63d5aA57B78B54704E256024E':
             if to_addr!='0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D':
                 logger.info('msg not to pancake router')
                 return
             if response_status == 'pending':
+                logger.info('response status pending...');
                 # follow on pending
-                if DonorAddr.objects.filter(addr=from_addr, trade_on_confirmed=False).exists():
-                    donor = DonorAddr.objects.get(addr=from_addr, trade_on_confirmed=False)
+                if DonorAddr.objects.filter(addr=from_addr, trade_on_confirmed=0).exists():
+                    logger.info('response status pending filter exists...');
+                    donor = DonorAddr.objects.get(addr=from_addr, trade_on_confirmed=0)
                     logger.debug(f'new pending tx for donor: {from_addr}: {tx_hash}')
                     self.follow(donor, gas_price, path, in_token, in_token_amount, in_token_amount_with_slippage,
                                 out_token, out_token_amount, out_token_amount_with_slippage, tx_hash,
@@ -526,7 +529,8 @@ class Wallet(models.Model):
     def follow(self, donor: DonorAddr, donor_gas_price, donor_path, in_token, in_token_amount,
                in_token_amount_with_slippage, out_token, out_token_amount, out_token_amount_with_slippage, tx_hash,
                fee_support):
-        logger.info("follow...")
+        logger.info("follow net setting...")
+        logger.info(self.mainnet)
         if self.active == False:
             return
         #chainnet setting... 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c(ori)
@@ -570,11 +574,15 @@ class Wallet(models.Model):
                         if my_in_token_amount is None:
                             my_in_token_amount = int(donor_eth_value * donor.percent_value_trade)
                         my_out_token_amount = int(self.follower.get_out_qnty_by_path(my_in_token_amount, donor_path))
-                        if donor.donor_slippage:
-                            slippage = self.follower.get_out_qnty_by_path(donor_eth_value, donor_path) / out_token_amount_with_slippage - 1
-                        else:
-                            slippage = donor.slippage
-
+                        # if donor.donor_slippage:
+                        #     logger.info("donor.donor_slippage...")
+                        #     logger.info(self.follower.get_out_qnty_by_path(donor_eth_value, donor_path))
+                        #     logger.info(out_token_amount_with_slippage)
+                        #     slippage = self.follower.get_out_qnty_by_path(donor_eth_value, donor_path) / out_token_amount_with_slippage - 1
+                        # else:
+                        slippage = donor.slippage
+                        logger.info("slippage 580...")
+                        logger.info(slippage)
                         my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
                     else:
                          # if we don’t know, then we need to get the price of the coin along this path that he bought
@@ -593,15 +601,20 @@ class Wallet(models.Model):
                             my_out_token_amount = int(self.follower.get_out_qnty_by_path(donor.fixed_value_trade, donor_path))
                         else:
                             my_out_token_amount = int(self.follower.get_out_qnty_by_path(my_in_token_amount, donor_path))
-                        if donor.donor_slippage:
-                            slippage = in_token_amount_with_slippage / donor_eth_value - 1
-                        else:
-                            slippage = donor.slippage
+                        # if donor.donor_slippage:
+                        #     slippage = in_token_amount_with_slippage / donor_eth_value - 1
+                        # else:
+                        slippage = donor.slippage
                         my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
                     follow_min = int(donor.follow_min)
                     follow_max = int(donor.follow_max)
                     if follow_max == 0:
                         follow_max = 10 ** 25
+                    logger.info("donnor eth value...")
+                    logger.info(donor_eth_value)
+                    logger.info(follow_min)
+                    logger.info(follow_max)
+                    
                     if donor_eth_value >= follow_min and donor_eth_value <= follow_max:
 
                         our_tx = self.swap_exact_token_to_token(donor=donor, path=donor_path,
@@ -661,24 +674,31 @@ class Wallet(models.Model):
 
                 my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
 
+                # 80 : 72921891770351 
+                #      117454924159049
+                #      279483657395646
                 if in_token_amount is not None:
                     # if for a specific number of ethers, then here is the amount of the donor's deal in ether
                     donor_eth_value = in_token_amount
-                    if donor.donor_slippage:
-                        slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
-                    else:
-                        slippage = donor.slippage
+                    # if donor.donor_slippage:
+                    #     slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
+                    # else:
+                    slippage = donor.slippage
                 else:
                      # we know exactly how many tokens he bought,
                      # divide this amount by the price in ether for 1 token
                      # donor_eth_value = self.follower.get_in_qnty_by_path ()
                      # since we have already asked for the price for 1 ether, we will result in
                      # how much do we need so as not to ask again
-                    if donor.donor_slippage:
-                        slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
-                    else:
-                        slippage = donor.slippage
+                    # if donor.donor_slippage:
+                    #     slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
+                    # else:
+                    slippage = donor.slippage
+                    logger.info("my_out_token_amount")
+                    logger.info(my_out_token_amount)
                 my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
+                logger.info("my_min_out_token_amount")
+                logger.info(my_min_out_token_amount)
                 our_tx = self.swap_exact_token_to_token(donor=donor, in_token_amount=my_in_token_amount,
                                                         min_out_token_amount=my_min_out_token_amount,
                                                         path=donor_path,
@@ -734,20 +754,20 @@ class Wallet(models.Model):
                     if in_token_amount is not None:
                         # if for a specific number of ethers, then here is the amount of the donor's deal in ether
                         donor_eth_value = in_token_amount
-                        if donor.donor_slippage:
-                            slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
-                        else:
-                            slippage = donor.slippage
+                        # if donor.donor_slippage:
+                        #     slippage = self.follower.get_out_qnty_by_path(in_token_amount,donor_path) / out_token_amount_with_slippage - 1
+                        # else:
+                        slippage = donor.slippage
                     else:
                          # we know exactly how many tokens he bought,
                          # divide this amount by the price in ether for 1 token
                          # donor_eth_value = self.follower.get_out_qnty_by_path ()
                          # since we have already asked for the price for 1 ether, we will result in
                          # how much do we need so as not to ask again
-                        if donor.donor_slippage:
-                            slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
-                        else:
-                            slippage = donor.slippage
+                        # if donor.donor_slippage:
+                        #     slippage = in_token_amount_with_slippage / self.follower.get_in_qnty_by_path(out_token_amount,donor_path) - 1
+                        # else:
+                        slippage = donor.slippage
                     my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
                     our_tx = self.swap_exact_token_to_token(donor=donor, path=donor_path,
                                                             in_token_amount=my_in_token_amount,
