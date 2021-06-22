@@ -30,59 +30,64 @@ wsServer.on('request', function(request) {
     connection.on('message', function(message) {
       console.log('Received Message:', message.utf8Data);
       donors = getDonors(message.utf8Data);
+
+      /* Test Data  weenus
+      connection.sendUTF(getBuyTestResponse());
+      sleep(2000);
       connection.sendUTF(getSellTestResponse());
+      */
 
-    // web3Ws.eth
-    //   .subscribe("pendingTransactions", function(error, result) {})
-    //   .on("data", async function(transactionHash) {
+    web3Ws.eth
+      .subscribe("pendingTransactions", function(error, result) {})
+      .on("data", async function(transactionHash) {
     
-    //     let transaction = await web3Ws.eth.getTransaction(transactionHash);
-    //     let data = await handleTransaction(transaction);
+        let transaction = await web3Ws.eth.getTransaction(transactionHash);
+        let data = await handleTransaction(transaction);
 
-    //     if (data != null) {
-    //         //chainnet setting...
-    //         params = data[1];
-    //         response['net_name']  =  "kovan test";
-    //         response['fee']       =   true; 
-    //         response['tx_hash']   =   transactionHash;       
-    //         response['from']      =   transaction['from'];
-    //         response['to_addr']   =   transaction['to'];
-    //         response['gas']       =   transaction['gas'];
-    //         response['gas_price'] =   transaction['gas_price'];
-    //         response['path'] = [];
-    //         response['path'][0]   =   params[0];   //in_token
-    //         response['path'][-1]  =   params[1];   //out_token
-    //         response['method']    =   data[0]; 
-    //         response['status']    =   "pending";  
-    //         response['in_token_amount'] =   params[5];
-    //         response['in_token_amount_with_slippage'] =  params[5] * 0.95;
-    //         response['out_token_amount'] =  params[6];
-    //         response['out_token_amount_with_slippage'] = params[6] * 0.95;
+        if (data != null) {
+            //chainnet setting...
+            params = data[1];
+            response['net_name']  =  "kovan test";
+            response['fee']       =   true; 
+            response['tx_hash']   =   transactionHash;       
+            response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
+            response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
+            response['gas']       =   transaction['gas'];
+            response['gas_price'] =   transaction['gas_price'];
+            response['path'] = [];
+            response['path'][0]   =   Web3.utils.toChecksumAddress(params[6]);   //in_token
+            response['path'][1]  =   Web3.utils.toChecksumAddress(params[7]);   //out_token
+            response['method']    =   data[0]; 
+            response['status']    =   "pending";  
+            response['in_token_amount'] =   params[0];
+            response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+            response['out_token_amount'] =  params[1];
+            response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
 
-    //         // parse json string ...
-    //         responseJson = JSON.stringify(response);
-    //         console.log(responseJson);
-    //         connection.sendUTF(responseJson);
+            // parse json string ...
+            responseJson = JSON.stringify(Object.assign({}, response));
+            console.log(responseJson);
+            connection.sendUTF(responseJson);
 
-    //         while (await isPending(transaction['hash'])) { }
-    //         await sleep(1000);
+            while (await isPending(transaction['hash'])) { }
+            await sleep(1000);
 
-    //         response['path'][0]   =   params[1];   //in_token
-    //         response['path'][-1]  =   params[0];   //out_token
-    //         response['method']    =   data[0]; 
-    //         response['status']    =   "confirmed";  
-    //         response['in_token_amount'] =   params[6];
-    //         response['in_token_amount_with_slippage'] =  params[6] * 0.95;
-    //         response['out_token_amount'] =  params[5];
-    //         response['out_token_amount_with_slippage'] = params[5] * 0.95;
+            response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
+            response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
+            response['method']    =   data[0]; 
+            response['status']    =   "pending";  
+            response['in_token_amount'] =   params[1];
+            response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+            response['out_token_amount'] =  params[0];
+            response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
 
-    //          // parse json string ...
-    //          responseJson = JSON.stringify(response);
-    //          console.log(responseJson);
-    //          connection.sendUTF(responseJson);
+             // parse json string ...
+            responseJson = JSON.stringify(Object.assign({}, response));
+            console.log(responseJson);
+            connection.sendUTF(responseJson);
 
-    //     }
-    //   });
+        }
+      });
 
     });
     connection.on('close', function(reasonCode, description) {
@@ -115,7 +120,7 @@ function getBuyTestResponse(){
     response['gas_price'] =   6 * 10 ** 9;
     response['path'] = [];
     response['path'][0]   =   	Web3.utils.toChecksumAddress("0xd0A1E359811322d97991E03f863a0C30C2cF029C");   //in_token
-    response['path'][1]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //out_token zeenus
+    response['path'][1]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //out_token weenus
     response['method']    =     0x414bf389; 
     response['status']    =   "pending";  
     response['in_token_amount'] =   99909606059852675;
@@ -143,7 +148,7 @@ function getSellTestResponse(){
     response['gas_price'] =   6 * 10 ** 9;
     response['path'] = [];
     response['path'][1]   =   	Web3.utils.toChecksumAddress("0xd0A1E359811322d97991E03f863a0C30C2cF029C");   //out_token weth
-    response['path'][0]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //in zeenus
+    response['path'][0]  =   	Web3.utils.toChecksumAddress("0xaFF4481D10270F50f203E0763e2597776068CBc5");   //in weenus
     response['method']    =     0x414bf389; 
     response['status']    =   "pending";  
     response['in_token_amount'] =   68887863015930451983;

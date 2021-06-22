@@ -159,6 +159,16 @@ class Wallet(models.Model):
         asset.balance=new_balance
         asset.save()
         return new_balance
+    
+    def refresh_token_balance_from_address(self,address):
+        logger.info("refresh_token_balance...")
+        asset=self.assets.get(addr=address)
+        token_contr=self.follower.get_erc_contract_by_addr(address)
+        new_balance=token_contr.functions.balanceOf(self.addr).call()
+        asset.balance=new_balance
+        asset.save()
+        return new_balance
+    
 
     def refresh_token_price(self,token_id):
         logger.info("refresh_token_price...")
@@ -667,9 +677,10 @@ class Wallet(models.Model):
                 out_token = weth_adr
 
             # we sell if we have already bought for this donor
-            if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, our_confirmed=True, donor=donor).exists():
-                my_in_token_amount = int(DonorAsset.objects.get(asset__addr=in_token, asset__wallet=self, donor=donor).qnty)
-
+            # if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, our_confirmed=True, donor=donor).exists():
+            if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, donor=donor).exists():
+                # my_in_token_amount = int(DonorAsset.objects.get(asset__addr=in_token, asset__wallet=self, donor=donor).qnty)
+                my_in_token_amount = self.refresh_token_balance_from_address(in_token)
                 # buyed_asset_out_for_one_ether = self.follower.get_out_qnty_by_path(10 ** 18, donor_path)
 
                 my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
@@ -710,6 +721,7 @@ class Wallet(models.Model):
                     asset.our_sell_tx_hash = our_tx
                     asset.donor_confirmed = donor.trade_on_confirmed
                     asset.save()
+                    asset.delete()
                     logger.info(msg)
                     self.send_msg_to_subscriber_tlg(msg)
                 else:
