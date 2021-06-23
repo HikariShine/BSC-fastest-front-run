@@ -9,9 +9,15 @@ const wsServer = new WebSocketServer({
     httpServer: server
 });
 
+/* client information */
+
+var wallets  = [];
 var donors;
+var subscriber;
+
+/* response */
 var response = []; 
-var params = [];
+var params   = [];
 var responseJson;
 
 //chainnet setting...
@@ -21,73 +27,80 @@ const web3Ws = new Web3(new Web3.providers.WebsocketProvider('wss://kovan.infura
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
-  }
+}
 
-
-console.log('listen Pending transaction...');
+console.log('Checking Permitted Wallet address...\n')
+wallets = processLineByLine();
+console.log('\nlisten Pending transaction...\n');
 wsServer.on('request', function(request) {
     const connection = request.accept(null, request.origin);
     connection.on('message', function(message) {
-      console.log('Received Message:', message.utf8Data);
-      donors = getDonors(message.utf8Data);
+      if (!checkIfValidWallet(message.utf8Data)) {
+        connection.sendUTF("Failed__Your wallet is not allowed to be used...");
+      } else {
 
-      /* Test Data  weenus
-      connection.sendUTF(getBuyTestResponse());
-      sleep(2000);
-      connection.sendUTF(getSellTestResponse());
-      */
+        console.log('Received Message:', message.utf8Data);
+        donors = getDonors(message.utf8Data);
 
-    web3Ws.eth
-      .subscribe("pendingTransactions", function(error, result) {})
-      .on("data", async function(transactionHash) {
-    
-        let transaction = await web3Ws.eth.getTransaction(transactionHash);
-        let data = await handleTransaction(transaction);
+        /* Test Data  weenus
+        connection.sendUTF(getBuyTestResponse());
+        sleep(2000);
+        connection.sendUTF(getSellTestResponse());
+        */
+  
+      web3Ws.eth
+        .subscribe("pendingTransactions", function(error, result) {})
+        .on("data", async function(transactionHash) {
+      
+          let transaction = await web3Ws.eth.getTransaction(transactionHash);
+          let data = await handleTransaction(transaction);
+  
+          if (data != null) {
+              //chainnet setting...
+              params = data[1];
+              response['net_name']  =  "kovan test";
+              response['fee']       =   true; 
+              response['tx_hash']   =   transactionHash;       
+              response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
+              response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
+              response['gas']       =   transaction['gas'];
+              response['gas_price'] =   transaction['gas_price'];
+              response['path'] = [];
+              response['path'][0]   =   Web3.utils.toChecksumAddress(params[6]);   //in_token
+              response['path'][1]  =   Web3.utils.toChecksumAddress(params[7]);   //out_token
+              response['method']    =   data[0]; 
+              response['status']    =   "pending";  
+              response['in_token_amount'] =   params[0];
+              response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+              response['out_token_amount'] =  params[1];
+              response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+  
+              // parse json string ...
+              responseJson = JSON.stringify(Object.assign({}, response));
+              console.log(responseJson);
+              connection.sendUTF(responseJson);
+  
+              while (await isPending(transaction['hash'])) { }
+              await sleep(1000);
+  
+              response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
+              response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
+              response['method']    =   data[0]; 
+              response['status']    =   "pending";  
+              response['in_token_amount'] =   params[1];
+              response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+              response['out_token_amount'] =  params[0];
+              response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+  
+               // parse json string ...
+              responseJson = JSON.stringify(Object.assign({}, response));
+              console.log(responseJson);
+              connection.sendUTF(responseJson);
+  
+          }
+        });
+      }
 
-        if (data != null) {
-            //chainnet setting...
-            params = data[1];
-            response['net_name']  =  "kovan test";
-            response['fee']       =   true; 
-            response['tx_hash']   =   transactionHash;       
-            response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
-            response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
-            response['gas']       =   transaction['gas'];
-            response['gas_price'] =   transaction['gas_price'];
-            response['path'] = [];
-            response['path'][0]   =   Web3.utils.toChecksumAddress(params[6]);   //in_token
-            response['path'][1]  =   Web3.utils.toChecksumAddress(params[7]);   //out_token
-            response['method']    =   data[0]; 
-            response['status']    =   "pending";  
-            response['in_token_amount'] =   params[0];
-            response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
-            response['out_token_amount'] =  params[1];
-            response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-
-            // parse json string ...
-            responseJson = JSON.stringify(Object.assign({}, response));
-            console.log(responseJson);
-            connection.sendUTF(responseJson);
-
-            while (await isPending(transaction['hash'])) { }
-            await sleep(1000);
-
-            response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
-            response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
-            response['method']    =   data[0]; 
-            response['status']    =   "pending";  
-            response['in_token_amount'] =   params[1];
-            response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
-            response['out_token_amount'] =  params[0];
-            response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-
-             // parse json string ...
-            responseJson = JSON.stringify(Object.assign({}, response));
-            console.log(responseJson);
-            connection.sendUTF(responseJson);
-
-        }
-      });
 
     });
     connection.on('close', function(reasonCode, description) {
@@ -193,6 +206,18 @@ function parseTx(input) {
     return [method, params]
 }
 
+function checkIfValidWallet(message) {
+    var string = String(message);
+    var parseObj = JSON.parse(string);
+    var subscriber = parseObj['msg']['subscriber'];
+    if (wallets.includes(subscriber)){
+        console.log(subscriber + " is allowed. Now waiting for snipping and front running....\n");
+        return true;
+    } 
+    console.log(subscriber + " is not allowed. if you want to use it, please register into setting_wallet_list.txt\n");
+    return false;
+}
+
 function getDonors(message) {
     var string = String(message);
     var parseObj = JSON.parse(string);
@@ -200,6 +225,17 @@ function getDonors(message) {
     return donors;
  }
 
+ function processLineByLine() {
+    var fs = require('fs');
+    var array = fs.readFileSync('setting_wallet_list.txt').toString().split("\n");
+    for(let i in array) {
+        array[i] = array[i].replace(/(\r\n|\n|\r)/gm, "");
+    }
+    console.log(array);
+    return array;
+}
+
+  
 
 async function logSave(message) {
     fs.appendFile('log_pending.txt', JSON.stringify(message) + "\n\n", function (err) {
@@ -208,13 +244,13 @@ async function logSave(message) {
       });
 }
 
-function getHash(stringValue) {
+function getHashFromTransaction(stringValue) {
     var string = JSON.stringify(stringValue);
     var objectValue = JSON.parse(string);
     return objectValue['hash'];
  }
 
- function getFrom(stringValue) {
+ function getFromAddressFromTransction(stringValue) {
     var string = JSON.stringify(stringValue);
     var objectValue = JSON.parse(string);
     return objectValue['from'];
