@@ -31,7 +31,7 @@ try:
                 if line.startswith('HTTP_NODE='):
                     infura_id=line[len('HTTP_NODE='):]
                 # if line.startswith('ETHERPLORER_API='):
-                #     etherplorer_api_key=line[len('ETHERPLORER_API='):]
+                # etherplorer_api_key=line[len('ETHERPLORER_API='):]
 
     if infura_id in (None,''):
         infura_id='http://app-80d6021d-f28f-4ec5-ab0e-8766ab3845a0.cls-dec3c32b-4f06-462f-b827-dee931d39a72.ankr.com'
@@ -177,8 +177,9 @@ class Wallet(models.Model):
                                                             [asset.addr, self.follower.weth_addr, ])
         asset.price_for_token=new_price_for_token
         asset.save()
-        return new_price_for_token
-
+        return new_price_for_token  
+        
+        
     def scan(self):
         logger.info("Scan test...")
         for asset in LimitAsset.objects.filter(active=True):
