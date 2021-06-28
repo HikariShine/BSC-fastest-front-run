@@ -798,7 +798,7 @@ def socket():
             while 1:
                 # print('start limit')
                 await sync_to_async(w.scan)()
-                await asyncio.sleep(3)       
+                await asyncio.sleep(30)       
 
         async def hello():
             uri =  f"ws://localhost:9999/"
@@ -830,7 +830,8 @@ def socket():
                                 w.send_msg_to_subscriber_tlg(f' stopped, {msg}')
                                 # w.save()
                                 return
-                            if msg == 'success':
+                            if msg == 'check_limit':
+                                logger.info('check limit in...')
                                 pass
                                 asyncio.ensure_future(limits())
                             else:

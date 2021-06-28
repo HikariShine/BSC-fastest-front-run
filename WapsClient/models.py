@@ -185,13 +185,18 @@ class Wallet(models.Model):
             logger.info("Scan...")
             for asset in LimitAsset.objects.filter(active=True):
                 # print(asset)
+                # can be removed below line when searching the new lp in realtime since it is set to "pending" after one running.
                 if asset.status not in ('pending','failed','executed'):
                     if asset.status=='stopped':
                         asset.status='running'
                     if asset.type=='buy':
+                        logger.info("buy")
                         price_for_qnty=self.follower.get_out_qnty_by_path(int(asset.qnty),
                                                                             [self.follower.weth_addr,asset.asset.addr,  ])
+                        logger.info("price_for_qnty: " + str(price_for_qnty))
                         price_per_token = int(asset.qnty)/10**(18-asset.asset.decimals)/price_for_qnty
+                        logger.info("price_per_token: " + str(price_per_token))
+                        logger.info("asset price: " + str(asset.price))
                         asset.curr_price = price_per_token
                         if asset.price>=asset.curr_price:
                             qnty_slippage=int(price_for_qnty*(1-(asset.slippage)/100))
@@ -276,8 +281,7 @@ class Wallet(models.Model):
             #chainnet setting...
             net_name = response['net_name']
             if net_name == 'bsc-main':
-                # tx_url = 'https://bscscan.com/tx/'
-                tx_url = 'https://kovan.etherscan.io/tx/'
+                tx_url = 'https://bscscan.com/tx/'
                 mainnet = True
             else:
                 tx_url = 'https://kovan.etherscan.io/tx/'
@@ -558,12 +562,16 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
+                self.approve_if_not(asset)
             else:
                 decimals=Asset.objects.get(addr=out_token,decimals__isnull=False).decimals
             # check that this is not some kind of yusdt
             if out_token not in [i.addr for i in self.skip_tokens.all()]:
                 # we buy, if we haven't bought for this donor yet, and passes through the filters
-                if not DonorAsset.objects.filter(asset__addr=out_token, asset__wallet=self, donor=donor).exists():
+                
+                # if not DonorAsset.objects.filter(asset__addr=out_token, asset__wallet=self, donor=donor).exists():
+                
+                if True:
                     # make followings as a percentage of the deal
                     # set the value to trade
                     if donor.fixed_trade:
@@ -612,6 +620,8 @@ class Wallet(models.Model):
                         # else:
                         slippage = donor.slippage
                         my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
+                        
+                        
                     follow_min = int(donor.follow_min)
                     follow_max = int(donor.follow_max)
                     if follow_max == 0:
@@ -630,11 +640,11 @@ class Wallet(models.Model):
                         if our_tx is not None:
                             msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nBuying not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)}\nToken - {out_token}\nfor {self.follower.convert_wei_to_eth(my_in_token_amount)} ether\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
 
-                            ass,created_ass=self.assets.get_or_create(addr=out_token)
-                            ass.donor_assets.create( buyed_for_addr=in_token,
-                                               buyed_for_qnty=my_in_token_amount, donor_tx_hash=tx_hash,
-                                               our_tx_hash=our_tx, donor=donor,
-                                               donor_confirmed=donor.trade_on_confirmed)
+                            # ass,created_ass=self.assets.get_or_create(addr=out_token)
+                            # ass.donor_assets.create( buyed_for_addr=in_token,
+                            #                    buyed_for_qnty=my_in_token_amount, donor_tx_hash=tx_hash,
+                            #                    our_tx_hash=our_tx, donor=donor,
+                            #                    donor_confirmed=donor.trade_on_confirmed)
 
                             logger.info(msg)
                             self.send_msg_to_subscriber_tlg(msg)
@@ -663,6 +673,7 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
+                self.approve_if_not(asset)
 
             if out_token in [i.addr for i in self.skip_tokens.all()]:
                 msg = f'donor is trying to sell token{in_token} for {out_token}, its in skip list, we wil sell it for wBNB directly'
@@ -674,9 +685,15 @@ class Wallet(models.Model):
 
             # we sell if we have already bought for this donor
             # if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, our_confirmed=True, donor=donor).exists():
-            if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, donor=donor).exists():
+            # if DonorAsset.objects.filter(asset__addr=in_token, asset__wallet=self, donor=donor).exists():
+            if True:
                 # my_in_token_amount = int(DonorAsset.objects.get(asset__addr=in_token, asset__wallet=self, donor=donor).qnty)
-                my_in_token_amount = self.refresh_token_balance_from_address(in_token)
+                my_in_token_amount = int(self.refresh_token_balance_from_address(in_token))
+                logger.info("my_in_token_amount..........")
+                
+                if my_in_token_amount < 1:
+                    return
+                logger.info(my_in_token_amount)
                 # buyed_asset_out_for_one_ether = self.follower.get_out_qnty_by_path(10 ** 18, donor_path)
 
                 my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
@@ -703,21 +720,23 @@ class Wallet(models.Model):
                     slippage = donor.slippage
                     logger.info("my_out_token_amount")
                     logger.info(my_out_token_amount)
+                    
                 my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
                 logger.info("my_min_out_token_amount")
                 logger.info(my_min_out_token_amount)
+                
                 our_tx = self.swap_exact_token_to_token(donor=donor, in_token_amount=my_in_token_amount,
                                                         min_out_token_amount=my_min_out_token_amount,
                                                         path=donor_path,
                                                         gas_price=our_gas_price, fee_support=fee_support)
                 if our_tx is not None:
                     msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nfor not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)} ether\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
-                    asset = DonorAsset.objects.get(asset__addr=in_token, donor=donor)
-                    asset.donor_sell_tx_hash = tx_hash
-                    asset.our_sell_tx_hash = our_tx
-                    asset.donor_confirmed = donor.trade_on_confirmed
-                    asset.save()
-                    asset.delete()
+                    # asset = DonorAsset.objects.get(asset__addr=in_token, donor=donor)
+                    # asset.donor_sell_tx_hash = tx_hash
+                    # asset.our_sell_tx_hash = our_tx
+                    # asset.donor_confirmed = donor.trade_on_confirmed
+                    # asset.save()
+                    # asset.delete()
                     logger.info(msg)
                     self.send_msg_to_subscriber_tlg(msg)
                 else:
@@ -835,7 +854,7 @@ class Wallet(models.Model):
         logger.info("approve_if_not...")
         appr_tx = None
         try:
-            # всегда передаем в аргумент фолловера, ему нужно присвоить правильные ключи, чтобы он торговал с этого акка
+            # we always pass it to the follower argument, needs to assign the correct keys so that he can trade from this account
             if asset==-1:
                 allowance = self.follower.get_allowance(self.follower.weth_addr)
                 if allowance < int(10**20) or (allowance == 0):
