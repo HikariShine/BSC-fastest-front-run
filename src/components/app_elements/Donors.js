@@ -216,7 +216,7 @@ export class Donors extends React.Component {
                                                     size="small"
                                                     type='number'
                                                     color="default"
-                                                    label='Minimum value to follow (eth)'
+                                                    label='Minimum value to follow (BNB)'
                                                     name={'follow_min'}
                                                     value={donor.follow_min}
                                                     onChange={this.props.input_change}
@@ -243,7 +243,7 @@ export class Donors extends React.Component {
                                                     size="small"
                                                     type='number'
                                                     color="default"
-                                                    label='Maximum value to follow (eth)'
+                                                    label='Maximum value to follow (BNB)'
                                                     name={'follow_max'}
                                                     value={donor.follow_max}
                                                     onChange={this.props.input_change}
