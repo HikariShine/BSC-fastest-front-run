@@ -178,14 +178,9 @@ class Wallet(models.Model):
         asset.price_for_token=new_price_for_token
         asset.save()
         return new_price_for_token  
-        
-        
-    def scan(self):
-        logger.info("Scan test...")
-        for asset in LimitAsset.objects.filter(active=True):
-            print(asset)
             
-    def scan_ori(self):
+    # this is for limit asset. In the server, it is only needed to send "success" signal without any searching or operations.        
+    def scan(self):
         try:
             logger.info("Scan...")
             for asset in LimitAsset.objects.filter(active=True):

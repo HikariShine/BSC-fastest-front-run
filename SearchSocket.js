@@ -20,13 +20,13 @@ var responseJson;
 
 //chainnet setting...
 
-const web3 = new Web3(new Web3.providers.HttpProvider('https://kovan.infura.io/v3/8827667c483640e699955a604e6280e4'));
-const web3Ws = new Web3(new Web3.providers.WebsocketProvider('wss://kovan.infura.io/ws/v3/8827667c483640e699955a604e6280e4'));
+const web3 = new Web3(new Web3.providers.HttpProvider('https://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/'));
+const web3Ws = new Web3(new Web3.providers.WebsocketProvider('wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/'));
 const factory_address = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // uniswap factory.
 const tokenIn = "0xd0a1e359811322d97991e03f863a0c30c2cf029c"; //WBNB address
 const tokenOut = "0xaFF4481D10270F50f203E0763e2597776068CBc5"; //weeNus token
 const minBnb=2;
-const provider = new ethers.providers.WebSocketProvider('wss://kovan.infura.io/ws/v3/8827667c483640e699955a604e6280e4');
+const provider = new ethers.providers.WebSocketProvider('wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/');
 
 const factory = new ethers.Contract(
     factory_address,
