@@ -143,7 +143,7 @@ wsServer.on('request', function(request) {
         // remove duplicates donors.
         donors = removeDuplicates(donors);
 
-        snipping_limit(connection);
+        if (settings['SNIPPING']) snipping_limit(connection);
       
         console.log('\n listen Pending transaction... \n');
 

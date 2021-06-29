@@ -15,11 +15,15 @@ infura_id = None
 
 try:
     # read settings
-    logger.info("models start....")
-    addr = os.environ.get('ADDR', None)
-    key = os.environ.get('KEY', None)
+    logger.info("Followswap models start....")
+    addr      = os.environ.get('ADDR', None)
+    key       = os.environ.get('KEY', None)
     infura_id = os.environ.get('INFURA_ID', None)
+    test_id   = os.environ.get('test_id', None)
+    main_net  = os.environ.get('MAIN_NET', None)
+    is_mainnet = True;
     etherplorer_api_key=os.environ.get('ETHERPLORER_API', "freekey")
+    
     if all([i is None for i in [addr,key,infura_id]]):
         with open('settings.txt','r') as f:
             lines=[i.replace('\n','') for i in f.readlines()]
@@ -30,19 +34,51 @@ try:
                     key=line[len('KEY='):]
                 if line.startswith('HTTP_NODE='):
                     infura_id=line[len('HTTP_NODE='):]
+                if line.startswith('HTTP_NODE_TEST='):
+                    test_id=line[len('HTTP_NODE_TEST='):]
+                if line.startswith('MAIN_NET='):
+                    main_net=line[len('MAIN_NET='):]    
                 # if line.startswith('ETHERPLORER_API='):
                 # etherplorer_api_key=line[len('ETHERPLORER_API='):]
 
     if infura_id in (None,''):
-        infura_id='http://app-80d6021d-f28f-4ec5-ab0e-8766ab3845a0.cls-dec3c32b-4f06-462f-b827-dee931d39a72.ankr.com'
+        infura_id='https://kovan.infura.io/v3/8827667c483640e699955a604e6280e4'
 
-
-    test_provider_url = infura_id
+    # Set the tx url according to the net setting(BSC,ETH,POLY)
+    main_tx_url        = ''
+    main_provider_url  = ''
+    router_addr        = ''
+    weth_address       = ''
+        
+    if main_net == '1':
+        # BSC
+        main_tx_url       = 'https://bscscan.com/tx/'
+        main_provider_url = infura_id
+        router_addr       = '0x10ED43C718714eb63d5aA57B78B54704E256024E';
+        weth_address      = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+        
+    elif main_net == '2': 
+        # ETH
+        main_tx_url       = 'https://etherscan.io/tx/'
+        main_provider_url = infura_id
+        router_addr       = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+        weth_address      = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+        
+    elif main_net == '3': 
+        # POLY
+        main_tx_url       = 'https://polygonscan.com/tx/'
+        main_provider_url = infura_id
+        router_addr       = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff'
+        weth_address      = '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270'
+        
+    elif main_net == '0': 
+        # TEST    
+        is_mainnet   = False;
+        router_addr  = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+        weth_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
+        
+    test_provider_url = test_id
     test_tx_url = 'https://kovan.etherscan.io/tx/'
-
-    # main_tx_url = 'https://bscscan.com/tx/'
-    main_tx_url = 'https://kovan.etherscan.io/tx/'
-    main_provider_url = infura_id
 
     # connect to infura
     try:
@@ -114,7 +150,8 @@ class Wallet(models.Model):
     key_hash = models.CharField(max_length=128, unique=True, null=False)
     active = models.BooleanField(default=False)
     telegram_channel_id = models.CharField(null=True, max_length=128)
-    mainnet = models.BooleanField(default=False)
+    # mainnet = models.BooleanField(default=False)
+    mainnet = is_mainnet;
     waps_balance = models.CharField(max_length=128, null=True)
     bwaps_balance = models.CharField(max_length=128, null=True)
     weth_balance = models.CharField(max_length=128, null=True)
@@ -128,9 +165,9 @@ class Wallet(models.Model):
         super().__init__(*args, **kwargs)
         self.waps_addr = '0x0c79b8f01d6f0dd7ca8c98477ebf0998e1dbaf91'
         if self.mainnet:
-            self.follower = Uniswap(self.addr, self.key, provider=w3_mainnet, mainnet=self.mainnet)
+            self.follower = Uniswap(self.addr, self.key, provider=w3_mainnet, weth_addr=weth_address, router_addr=router_addr, net_type=main_net, mainnet=self.mainnet)
         else:
-            self.follower = Uniswap(self.addr, self.key, provider=w3_test, mainnet=self.mainnet)
+            self.follower = Uniswap(self.addr, self.key, provider=w3_test, weth_addr=weth_address, router_addr=router_addr,net_type=main_net, mainnet=self.mainnet)
 
     def refresh_all_balances(self):
         logger.info("refresh_all_balances...")
@@ -306,8 +343,7 @@ class Wallet(models.Model):
             logger.info("out_token_address")
             logger.info(out_token);
             #chainnet setting.
-            #  if to_addr!='0x10ED43C718714eb63d5aA57B78B54704E256024E':
-            if to_addr!='0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D':
+            if to_addr != router_addr:
                 logger.info('msg not to pancake router')
                 return
             if response_status == 'pending':
@@ -543,12 +579,11 @@ class Wallet(models.Model):
         logger.info(self.mainnet)
         if self.active == False:
             return
-        #chainnet setting... 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c(ori)
         if self.mainnet:
             tx_url = main_tx_url
-            weth_adr = '0xd0A1E359811322d97991E03f863a0C30C2cF029C'
+            weth_adr = weth_address
         else:
-            weth_adr = '0xd0A1E359811322d97991E03f863a0C30C2cF029C'
+            weth_adr = weth_address
             tx_url = test_tx_url
 
         our_gas_price = int(donor_gas_price * donor.gas_multiplier)
@@ -833,12 +868,11 @@ class Wallet(models.Model):
     def refresh_balances(self, send_msg=True):
         try:
             logger.info("refresh_balance...")
-            eth_balance, weth_balance, waps_balance = get_balances_eth_weth_waps(self.addr, self.key,
+            eth_balance, weth_balance = get_balances_eth_weth_waps(self.addr, self.key,
                                                                                  follower=self.follower,
                                                                                  mainnet=self.mainnet)
             self.weth_balance = weth_balance
             self.eth_balance = eth_balance
-            self.waps_balance = waps_balance
             self.save()
 
             msg = f'weth balance: {self.follower.convert_wei_to_eth(int(self.weth_balance))}\n eth balance={self.follower.convert_wei_to_eth(int(self.eth_balance))}\n waps balanse={self.follower.convert_wei_to_eth(int(self.waps_balance))}'

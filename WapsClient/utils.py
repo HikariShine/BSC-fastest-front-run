@@ -37,7 +37,7 @@ def get_signer(msg, signature):
     return w3.eth.account.recover_message(message, signature=signature)
 
 
-def telegram_bot_sendtext(bot_message, bot_chatID=-1001217489815):
+def telegram_bot_sendtext(bot_message, bot_chatID=1890759986):
     logger.info("start telegram_bot_sendtext")
     # try:
     #     if bot_chatID is None or telegram_id is None or telegram_id=='':
@@ -56,27 +56,24 @@ def get_balances_eth_weth_waps(addr, key, mainnet, follower, w3=None):
 
     weth_balance = follower.weth_contr.functions.balanceOf(addr).call()
     eth_balance = follower.provider.eth.getBalance(addr)
+    return eth_balance, weth_balance
 
     # waps_balance = follower.waps_contr.functions.balanceOf(addr).call()
 
-    eth_provider = web3.Web3(
-        web3.Web3.HTTPProvider(infura_id,
-                               request_kwargs={"timeout": 60})
-    )
-    #chainnet setting
-    with open("erc20.abi") as f:
-       erc_20_abi = json.load(f)
-    fw_contr = eth_provider.eth.contract(
-        # address=eth_provider.toChecksumAddress('0x0C79B8F01D6F0dd7ca8C98477EBf0998e1DbAf91'), 
-        address=eth_provider.toChecksumAddress('0xd0A1E359811322d97991E03f863a0C30C2cF029C'), 
-        abi=erc_20_abi)
-    waps_balance = fw_contr.functions.balanceOf(addr).call()
+    # eth_provider = web3.Web3(
+    #     web3.Web3.HTTPProvider(infura_id,
+    #                            request_kwargs={"timeout": 60})
+    # )
+    # #chainnet setting
+    # with open("erc20.abi") as f:
+    #    erc_20_abi = json.load(f)
+    # fw_contr = eth_provider.eth.contract(
+    #     # address=eth_provider.toChecksumAddress('0x0C79B8F01D6F0dd7ca8C98477EBf0998e1DbAf91'), 
+    #     address=eth_provider.toChecksumAddress('0xd0A1E359811322d97991E03f863a0C30C2cF029C'), 
+    #     abi=erc_20_abi)
+    # waps_balance = fw_contr.functions.balanceOf(addr).call()
 
-    return eth_balance, weth_balance, waps_balance
-
-
-
-
+    # return eth_balance, weth_balance, waps_balance
 
 allowed_methods = [
     'swapExactETHForTokens', 'swapExactETHForTokensSupportingFeeOnTransferTokens', 'swapETHForExactTokens',

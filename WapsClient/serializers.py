@@ -113,9 +113,7 @@ class WalletSerializer(serializers.ModelSerializer):
 
         data['weth_balance']=weth_balance
         data['eth_balance']=eth_balance
-        data['waps_balance']=waps_balance
-
-
+        # data['waps_balance']=waps_balance
 
         if Wallet.objects.filter(addr=data['addr']).exists():
             donors = Wallet.objects.get(addr=data['addr']).donors

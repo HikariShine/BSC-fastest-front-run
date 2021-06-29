@@ -141,7 +141,7 @@ def update_skip(request):
         return JsonResponse({'non_field_errors': ['invalid address for wallet, update wallet information']}, status=400)
     if Wallet.objects.filter(key_hash=key_hash).exists() == False:
         return JsonResponse({'non_field_errors': ['invalid key for wallet, update wallet information']}, status=400)
-    if token_addr in ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0xc778417E063141139Fce010982780140Aa0cD5Ab'):
+    if token_addr in ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'):
         return JsonResponse({'addr': ['cant blacklist weth']}, status=400)
     else:
         wallet = Wallet.objects.get(addr=addr, key_hash=key_hash)
@@ -220,7 +220,7 @@ def update_asset(request):
         return JsonResponse({'non_field_errors': ['invalid key for wallet, update wallet information']}, status=400)
     else:
         wallet = Wallet.objects.get(addr=addr, key_hash=key_hash)
-        if token_addr in ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0xc778417E063141139Fce010982780140Aa0cD5Ab'):
+        if token_addr in ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'):
             return JsonResponse({'addr': ['cant trade weth']}, status=400)
         if data['token']['id'] != -2:
             skip_token = DonorAsset.objects.get(pk=data['token']['id'])
