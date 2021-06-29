@@ -105,9 +105,9 @@ class Uniswap():
             logger.info("get_out_qnty_by_path exception")
             return None
     def get_in_qnty_by_path(self, amount, path):
-        '''количество токенов path[0], которое нам нужно, чтобы получить amount токенов path[-1]
-        типа сколько нам нужно токенов а, чтобы получить конкретное количество токенов б по пути path
-        SwapTokensForExactTokens'''
+        # the amount of path [0] tokens we need to get the amount of path [-1] tokens
+        # like how many tokens a do we need to get a specific number of tokens b along the path
+        # SwapTokensForExactTokens
 
         return self.uni_contract.functions.getAmountsIn(int(amount),
                                                         path).call()[0]
@@ -161,25 +161,25 @@ class Uniswap():
     def swap_exact_token_for_token(self, in_token_amount, path, min_out_token_amount,
                                    deadline=None, gas=320000,
                                    gas_price=None,fee_support=True):
-        ''' отправить транзакцию на обмен конкретного количества эфиров на токен'''
-        # устанавливаем дедлайн
+        # send a transaction to exchange a specific amount of Ether for a token
+        # set deadline
         try:
             if deadline is None:
                 deadline = self.get_default_deadline()
 
-            # создаем транзакцию
+            # create a transaction
             tx = self._create_exact_token_for_token_tx(in_token_amount, min_out_token_amount, path,
                                                        deadline=deadline,fee_support=fee_support )
 
-            # добавляем всякую хуйню типа нонсе,газ и проч
+            # add all kinds of nonce, gas, etc.
             logger.info("swap_exact_token_for_token")
             logger.info(gas)
             logger.info(gas_price)
             b_tx = self.build_tx(tx, gas=gas, gas_price=gas_price)
 
-            # подписали транзакцию ключом
+            # signed the transaction with a key
             signed_tx = self.sign_row_tx(b_tx)
-            # исполнили
+            # performed
             return self.send_signed_raw_tx(signed_tx)
         except Exception as ex:
             logger.exception(ex)
@@ -189,16 +189,16 @@ class Uniswap():
     def swap_token_for_exact_token(self, out_token_amount, path, max_in_token_amount=None,
                                    deadline=None, gas=320000,
                                    gas_price=None):
-        ''' отправить транзакцию на обмен конкретного количества эфиров на токен'''
-        # устанавливаем дедлайн
+        # send a transaction to exchange a specific amount of Ether for a token
+        # set deadline
         if deadline is None:
             deadline = self.get_default_deadline()
 
-        # создаем транзакцию
+        # create a transaction
         tx = self._create_token_for_exact_token_tx(max_in_token_amount, out_token_amount, path,
                                                    deadline=deadline, )
 
-        # добавляем всякую хуйню типа нонсе,газ и проч
+        # add all kinds of nonce, gas, etc.
         b_tx = self.build_tx(tx, gas=gas, gas_price=gas_price)
 
         signed_tx = self.sign_row_tx(b_tx)
@@ -206,10 +206,7 @@ class Uniswap():
         return self.send_signed_raw_tx(signed_tx)
 
     def build_tx(self, tx, gas, gas_price):
-        # добавляем в транзакцию обязательные поля
-        # 0x9ad3da0dddc579799c0b35a31886f2c54f252fc54819d2a9ce0d3d84673bf00f
-        # 0xd6d6bd2f01e6de359fc7b0a655d90f5ff7c9fafc8f67d632a1b7be181e03fbad
-
+        # add required fields to the transaction
         logger.info("build_Tx")
         logger.info(self.provider.eth.getTransactionCount(self.addr))
 
