@@ -75,7 +75,7 @@ const buyMethod = buy_method;
     var initialLiquidityDetected = false;
     var jmlBnb = 0;
 
-/************* detecting new liquidity moudle */
+/************* detecting new liquidity module */
 
 const requestListener = function (req, res) {
 
@@ -179,16 +179,14 @@ wsServer.on('request', function(request) {
               console.log(responseJson);
               connection.sendUTF(responseJson);
 
-              console.log("sent buy response.........");
+              console.log("Sent buy response.........");
 
                 while (await isPending(transaction['hash'])) {
                     console.log("waiting pending.........");
                 }
 
                 await sleep(3000);
-
-                console.log("before send sell response.........");
-
+                console.log("Before sending sell response.........");
                 response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                 response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
                 response['method']    =   data[0]; 
@@ -201,7 +199,6 @@ wsServer.on('request', function(request) {
                 responseJson = JSON.stringify(Object.assign({}, response));
                 console.log(responseJson);
                 connection.sendUTF(responseJson);
-  
           }
         });
       }
@@ -211,8 +208,6 @@ wsServer.on('request', function(request) {
         console.log('Client has disconnected.');
     });
 });
-
-
 
 async function snipping_run(connection){
     await checkLiq(connection);
@@ -292,14 +287,10 @@ function makeLiquidResponse() {
 
     // parse json string ...
     responseJson = JSON.stringify(Object.assign({}, response));
-
     console.log(response);
     console.log(responseJson);
-
     return responseJson;
-
 }
-
 
 function getBuyTestResponse(){
 
@@ -351,10 +342,8 @@ function getSellTestResponse(){
 
     // parse json string ...
     responseJson = JSON.stringify(Object.assign({}, response));
-
     console.log(response);
     console.log(responseJson);
-
     return responseJson;
 }
 

