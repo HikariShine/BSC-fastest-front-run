@@ -5,7 +5,7 @@ const Tx = require('ethereumjs-tx');
 const url = require('url');
 const Web3 = require("web3");
 const ethers = require('ethers');
-const axios = require('axios')
+const axios = require('axios');
 const server_url = "http://localhost:9999"
 
 /* client information */
@@ -17,35 +17,65 @@ var donors   = [];  // register all donors each client wallets.
 var response = [];
 var params   = [];
 var responseJson;
+var settings = [];
 
-//chainnet setting...
+/* At the first, read the setting of the project, set the Node API and token address according to this */
+console.log('Loading setting...\n')
+settings = LoadSettings();
 
-const web3 = new Web3(new Web3.providers.HttpProvider('https://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/'));
-const web3Ws = new Web3(new Web3.providers.WebsocketProvider('wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/'));
-const factory_address = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // uniswap factory.
-const tokenIn = "0xd0a1e359811322d97991e03f863a0c30c2cf029c"; //WBNB address
-const tokenOut = "0xaFF4481D10270F50f203E0763e2597776068CBc5"; //weeNus token
-const minBnb=2;
-const provider = new ethers.providers.WebSocketProvider('wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/');
+/* chainnet setting... */
+var http_node_url, wss_node_url, factory_addr, token_in, buy_method , router_addr;
 
-const factory = new ethers.Contract(
-    factory_address,
-    [
-      'event PairCreated(address indexed token0, address indexed token1, address pair, uint)',
-      'function getPair(address tokenA, address tokenB) external view returns (address pair)'
-    ],
-    provider
-  );
+if (settings['MAIN_NET'] === '1') {  //BSC main net
+    console.log("Navigate to BSC Mainnet.... \n");
+    http_node_url = settings['HTTP_NODE'];
+    wss_node_url  = settings['WSS_NODE'];
+    token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // 
+    factory_addr  = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";     //  (v2 router)
+    buy_method    = "0x7ff36ab5";                                     //  (v2 router) same in Ether and BSC
+    router_addr   = "0x10ED43C718714eb63d5aA57B78B54704E256024E"      // router address (v2 router)
+
+} else  if (settings['MAIN_NET'] === '0') {  //Kovan testnet
+    console.log("Navigate to ETH Kovan Testnet.... \n");
+    http_node_url = settings['HTTP_NODE_TEST'];
+    wss_node_url  = settings['WSS_NODE_TEST'];
+    token_in      = "0xd0a1e359811322d97991e03f863a0c30c2cf029c";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
+    factory_addr  = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";     // same in the Eth mainnet, kovan, ... (v2 router)
+    buy_method    = "0x7ff36ab5";                                     // same in the ETH mainnet (v2 router)
+    router_addr   = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"      // router address (v2 router)
+}
+
+const web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
+const web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
+const factory_address = factory_addr; // uniswap factory.
+const tokenIn   = token_in; //WBNB address 
+const buyMethod = buy_method;
 
 
-  const erc = new ethers.Contract(
-    tokenIn,
-    [{"constant": true,"inputs": [{"name": "_owner","type": "address"}],"name": "balanceOf","outputs": [{"name": "balance","type": "uint256"}],"payable": false,"type": "function"}],
-    provider
-  );  
+/************** THis is for the detecting new liquidity, exactly detect if liquidity exists enough... */
 
-var initialLiquidityDetected = false;
-var jmlBnb = 0;
+    const tokenOut = "0xaFF4481D10270F50f203E0763e2597776068CBc5"; //weeNus token
+    const minBnb=2;
+    const provider = new ethers.providers.WebSocketProvider('wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/');
+
+    const factory = new ethers.Contract(
+        factory_address,
+        [
+        'event PairCreated(address indexed token0, address indexed token1, address pair, uint)',
+        'function getPair(address tokenA, address tokenB) external view returns (address pair)'
+        ],
+        provider
+    );
+
+    const erc = new ethers.Contract(
+        tokenIn,
+        [{"constant": true,"inputs": [{"name": "_owner","type": "address"}],"name": "balanceOf","outputs": [{"name": "balance","type": "uint256"}],"payable": false,"type": "function"}],
+        provider
+    );  
+    var initialLiquidityDetected = false;
+    var jmlBnb = 0;
+
+/************* detecting new liquidity moudle */
 
 const requestListener = function (req, res) {
 
@@ -80,7 +110,6 @@ async function checkIfValidWallet(message) {
     return res.data.result;
 }
 
-
 const server = http.createServer(requestListener);
 server.listen(9999, () => {
     console.log("listening on 9999");
@@ -93,11 +122,10 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-console.log('Checking Permitted Wallet address...\n')
+console.log('Checking Permitted Wallet address...\n');
 
 wallets = processLineByLine();
 
-console.log('\nlisten Pending transaction...\n');
 
 wsServer.on('request', function(request) {
 
@@ -115,24 +143,18 @@ wsServer.on('request', function(request) {
         // remove duplicates donors.
         donors = removeDuplicates(donors);
 
-        /* Test Data  weenus
-        connection.sendUTF(getBuyTestResponse());
-        sleep(2000);
-        connection.sendUTF(getSellTestResponse());
-        */
-  
-    //    snipping_run(connection);
-
-         snipping_limit(connection);
+        snipping_limit(connection);
       
-       web3Ws.eth
+        console.log('\n listen Pending transaction... \n');
+
+        web3Ws.eth
         .subscribe("pendingTransactions", function(error, result) {})
         .on("data", async function(transactionHash) {
       
           let transaction = await web3Ws.eth.getTransaction(transactionHash);
           let data = await handleTransaction(transaction);
   
-          if (data != null && data[0] === "0x7ff36ab5") {
+          if (data != null && data[0] === buyMethod) {
               //chainnet setting...
               params = data[1];
               response['net_name']  =  "kovan test";
@@ -159,7 +181,6 @@ wsServer.on('request', function(request) {
 
               console.log("sent buy response.........");
 
-
                 while (await isPending(transaction['hash'])) {
                     console.log("waiting pending.........");
                 }
@@ -176,12 +197,10 @@ wsServer.on('request', function(request) {
                 response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
                 response['out_token_amount'] =  params[0];
                 response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-
                 // parse json string ...
                 responseJson = JSON.stringify(Object.assign({}, response));
                 console.log(responseJson);
                 connection.sendUTF(responseJson);
-
   
           }
         });
@@ -365,7 +384,7 @@ function parseTx(input){
         params.push(param);
     }
 
-    if(method === "0x7ff36ab5") {
+    if(method === buyMethod) {
         console.log("Buy transction...");
         params[7]=params[6];
         params[6]=params[5];
@@ -376,8 +395,6 @@ function parseTx(input){
     return [method, params]
 }
 
-
-
 function getDonors(message) {
     var string = String(message);
     var parseObj = JSON.parse(string);
@@ -386,13 +403,26 @@ function getDonors(message) {
  }
 
  function processLineByLine() {
-    var fs = require('fs');
     var array = fs.readFileSync('setting_wallet_list.txt').toString().split("\n");
     for(let i in array) {
         array[i] = array[i].replace(/(\r\n|\n|\r)/gm, "");
     }
     console.log(array);
     return array;
+}
+
+function LoadSettings(){
+    var array = fs.readFileSync('settings.txt').toString().split("\n");
+    var pos;
+    var key;
+    var newArr = [];
+    for(let i in array) {
+        array[i] = array[i].replace(/(\r\n|\n|\r)/gm, "");
+        pos = array[i].indexOf("=");
+        key = array[i].substring(0, pos);
+        newArr[key] = array[i].substring(pos+1,array[i].length);
+    }
+    return newArr;
 }
 
 function removeDuplicates(data) {
