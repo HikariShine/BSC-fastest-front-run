@@ -39,7 +39,7 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     console.log("Navigate to ETH Kovan Testnet.... \n");
     http_node_url = settings['HTTP_NODE_TEST'];
     wss_node_url  = settings['WSS_NODE_TEST'];
-    token_in      = "0xd0a1e359811322d97991e03f863a0c30c2cf029c";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
+    token_in      = "0xd0A1E359811322d97991E03f863a0C30C2cF029C";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
     factory_addr  = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";     // same in the Eth mainnet, kovan, ... (v2 router)
     buy_method    = "0x7ff36ab5";                                     // same in the ETH mainnet (v2 router)
     router_addr   = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"      // router address (v2 router)

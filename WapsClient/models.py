@@ -69,13 +69,13 @@ try:
         main_tx_url       = 'https://polygonscan.com/tx/'
         main_provider_url = infura_id
         router_addr       = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff'
-        weth_address      = '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270'
+        weth_address      = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'
         
     elif main_net == '0': 
         # TEST    
         is_mainnet   = False;
         router_addr  = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
-        weth_address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
+        weth_address = '0xd0A1E359811322d97991E03f863a0C30C2cF029C'
         
     test_provider_url = test_id
     test_tx_url = 'https://kovan.etherscan.io/tx/'
@@ -165,9 +165,9 @@ class Wallet(models.Model):
         super().__init__(*args, **kwargs)
         self.waps_addr = '0x0c79b8f01d6f0dd7ca8c98477ebf0998e1dbaf91'
         if self.mainnet:
-            self.follower = Uniswap(self.addr, self.key, provider=w3_mainnet, weth_addr=weth_address, router_addr=router_addr, net_type=main_net, mainnet=self.mainnet)
+            self.follower = Uniswap(self.addr, self.key, provider=w3_mainnet, weth_address=weth_address, router_addr=router_addr, net_type=main_net, mainnet=self.mainnet)
         else:
-            self.follower = Uniswap(self.addr, self.key, provider=w3_test, weth_addr=weth_address, router_addr=router_addr,net_type=main_net, mainnet=self.mainnet)
+            self.follower = Uniswap(self.addr, self.key, provider=w3_test, weth_address=weth_address, router_addr=router_addr,net_type=main_net, mainnet=self.mainnet)
 
     def refresh_all_balances(self):
         logger.info("refresh_all_balances...")

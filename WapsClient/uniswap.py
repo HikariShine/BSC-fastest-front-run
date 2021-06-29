@@ -34,12 +34,12 @@ class Uniswap():
         return None
 
     def get_erc_contract_by_addr(self,addr):
-        if addr==self.waps_addr:
-            from WapsClient.models import w3_mainnet
-            contr = w3_mainnet.eth.contract(address=w3_mainnet.toChecksumAddress(addr),
-                                               abi=self.erc_20_abi)
-        else:
-            contr = self.provider.eth.contract(address=self.provider.toChecksumAddress(addr),
+        # if addr==self.waps_addr:
+        #     from WapsClient.models import w3_mainnet
+        #     contr = w3_mainnet.eth.contract(address=w3_mainnet.toChecksumAddress(addr),
+        #                                        abi=self.erc_20_abi)
+        # else:
+        contr = self.provider.eth.contract(address=self.provider.toChecksumAddress(addr),
                                            abi=self.erc_20_abi)
         return contr
 
