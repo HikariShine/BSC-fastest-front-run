@@ -34,9 +34,6 @@ from asgiref.sync import sync_to_async
 #     w.save()
 new_process = None
 
-
-
-
 # if Wallet.objects.get(addr=addr,key=key).active==False:
 
 # else:
