@@ -24,19 +24,21 @@ console.log('Loading setting...\n')
 settings = LoadSettings();
 
 /* chainnet setting... */
-var http_node_url, wss_node_url, factory_addr, token_in, buy_method , router_addr;
+var http_node_url, wss_node_url, factory_addr, token_in, buy_method , router_addr, net_name;
 
 if (settings['MAIN_NET'] === '1') {  //BSC main net
     console.log("Navigate to BSC Mainnet.... \n");
+    net_name      = "BSC Mainnet"
     http_node_url = settings['HTTP_NODE'];
     wss_node_url  = settings['WSS_NODE'];
-    token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // 
+    token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // WBNB
     factory_addr  = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";     //  (v2 router)
     buy_method    = "0x7ff36ab5";                                     //  (v2 router) same in Ether and BSC
     router_addr   = "0x10ED43C718714eb63d5aA57B78B54704E256024E"      // router address (v2 router)
 
 } else  if (settings['MAIN_NET'] === '0') {  //Kovan testnet
     console.log("Navigate to ETH Kovan Testnet.... \n");
+    net_name      = "Kovan Testnet"
     http_node_url = settings['HTTP_NODE_TEST'];
     wss_node_url  = settings['WSS_NODE_TEST'];
     token_in      = "0xd0A1E359811322d97991E03f863a0C30C2cF029C";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
@@ -45,8 +47,10 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     router_addr   = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"      // router address (v2 router)
 }
 
-const web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
-const web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
+var web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
+var web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
+
+
 const factory_address = factory_addr; // uniswap factory.
 const tokenIn   = token_in; //WBNB address 
 const buyMethod = buy_method;
@@ -138,69 +142,99 @@ wsServer.on('request', function(request) {
       } else {
 
         console.log('Received Message:', message.utf8Data);
-
         donors.push.apply(donors, getDonors(message.utf8Data));
         // remove duplicates donors.
         donors = removeDuplicates(donors);
 
-        if (settings['SNIPPING']) snipping_limit(connection);
+        if (settings['SNIPPING'] === '1') connection.sendUTF("check_limit");
       
         console.log('\n listen Pending transaction... \n');
 
-        web3Ws.eth
-        .subscribe("pendingTransactions", function(error, result) {})
-        .on("data", async function(transactionHash) {
-      
-          let transaction = await web3Ws.eth.getTransaction(transactionHash);
-          let data = await handleTransaction(transaction);
-  
-          if (data != null && data[0] === buyMethod) {
-              //chainnet setting...
-              params = data[1];
-              response['net_name']  =  "kovan test";
-              response['fee']       =   true; 
-              response['tx_hash']   =   transactionHash;       
-              response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
-              response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
-              response['gas']       =   transaction['gas'];
-              response['gas_price'] =   transaction['gasPrice'];
-              response['path'] = [];
-              response['path'][0]   =   Web3.utils.toChecksumAddress(params[6]);   //in_token
-              response['path'][1]  =   Web3.utils.toChecksumAddress(params[7]);   //out_token
-              response['method']    =   data[0]; 
-              response['status']    =   "pending";  
-              response['in_token_amount'] =   params[0];
-              response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
-              response['out_token_amount'] =  params[1];
-              response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-  
-              // parse json string ...
-              responseJson = JSON.stringify(Object.assign({}, response));
-              console.log(responseJson);
-              connection.sendUTF(responseJson);
+        console.log("Start listening function...");
 
-              console.log("Sent buy response.........");
-
-                while (await isPending(transaction['hash'])) {
-                    console.log("waiting pending.........");
+          web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
+          web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
+          var subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
+          
+          subscription.on("data", async function(transactionHash) {
+            try {  
+                console.log(transactionHash);
+                let transaction = await web3Ws.eth.getTransaction(transactionHash);
+                let data = await handleTransaction(transaction);
+        
+                if (data != null && data[0] === buyMethod) {
+                    //chainnet setting...
+                    params = data[1];
+                    response['net_name']  =   net_name;
+                    response['fee']       =   true; 
+                    response['tx_hash']   =   transactionHash;       
+                    response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
+                    response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
+                    response['gas']       =   transaction['gas'];
+                    response['gas_price'] =   transaction['gasPrice'];
+                    response['path'] = [];
+                    response['path'][0]   =   Web3.utils.toChecksumAddress(params[6]);   //in_token
+                    response['path'][1]   =   Web3.utils.toChecksumAddress(params[7]);   //out_token
+                    response['method']    =   data[0]; 
+                    response['status']    =   "pending";  
+                    response['in_token_amount'] =   params[0];
+                    response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+                    response['out_token_amount'] =  params[1];
+                    response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+        
+                    // parse json string ...
+                    responseJson = JSON.stringify(Object.assign({}, response));
+                    console.log(responseJson);
+                    connection.sendUTF(responseJson);
+    
+                    console.log("Sent buy response.........");
+    
+                    while (await isPending(transaction['hash'])) {
+                        console.log("waiting pending.........");
+                    }
+    
+                    await sleep(3000);
+                    console.log("Before sending sell response.........");
+                    response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
+                    response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
+                    response['method']    =   data[0]; 
+                    response['status']    =   "pending";  
+                    response['in_token_amount'] =   params[1];
+                    response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+                    response['out_token_amount'] =  params[0];
+                    response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+                    // parse json string ...
+                    responseJson = JSON.stringify(Object.assign({}, response));
+                    console.log(responseJson);
+                    connection.sendUTF(responseJson);
                 }
+           } catch (err){
+             console.log("catch errors...");
+             subscription.unsubscribe(function(error, success){
+                if(success){
+                    console.log('Successfully unsubscribed!'); 
+                    setTimeout(startListening, 3000);
+                } else {
+                    console.log(error);
+                }
+              }  
+            );
+           }
 
-                await sleep(3000);
-                console.log("Before sending sell response.........");
-                response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
-                response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
-                response['method']    =   data[0]; 
-                response['status']    =   "pending";  
-                response['in_token_amount'] =   params[1];
-                response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
-                response['out_token_amount'] =  params[0];
-                response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-                // parse json string ...
-                responseJson = JSON.stringify(Object.assign({}, response));
-                console.log(responseJson);
-                connection.sendUTF(responseJson);
-          }
-        });
+          });
+        //   subscription.on('error', async () => {
+        //     console.log('error ... Unable to connect to node retrying in 3s...');
+        //     setTimeout(startListening, 3000);
+        //   });
+        //   subscription.on('close', async () => {
+        //     console.log('Close... Unable to connect to node retrying in 3s..');
+        //     subscription._webSocket.terminate();
+        //     setTimeout(startListening, 3000);
+        //   });
+
+
+
+        
       }
 
     });

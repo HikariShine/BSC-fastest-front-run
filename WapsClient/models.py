@@ -158,8 +158,8 @@ class Wallet(models.Model):
     key_hash = models.CharField(max_length=128, unique=True, null=False)
     active = models.BooleanField(default=False)
     telegram_channel_id = models.CharField(null=True, max_length=128)
-    # mainnet = models.BooleanField(default=False)
-    mainnet = is_mainnet;
+    mainnet = models.BooleanField(default=False)
+    # mainnet = is_mainnet;
     waps_balance = models.CharField(max_length=128, null=True)
     bwaps_balance = models.CharField(max_length=128, null=True)
     weth_balance = models.CharField(max_length=128, null=True)
@@ -172,6 +172,7 @@ class Wallet(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.waps_addr = '0x0c79b8f01d6f0dd7ca8c98477ebf0998e1dbaf91'
+        self.mainnet = is_mainnet
         if self.mainnet:
             self.follower = Uniswap(self.addr, self.key, provider=w3_mainnet, weth_address=weth_address, router_addr=router_addr, net_type=main_net, mainnet=self.mainnet)
         else:
@@ -207,7 +208,7 @@ class Wallet(models.Model):
     
     def refresh_token_balance_from_address(self,address):
         logger.info("refresh_token_balance...")
-        asset=self.assets.get(addr=address)
+        asset=Asset.objects.get(addr=address)
         token_contr=self.follower.get_erc_contract_by_addr(address)
         new_balance=token_contr.functions.balanceOf(self.addr).call()
         asset.balance=new_balance
@@ -304,7 +305,6 @@ class Wallet(models.Model):
         
     def parse_client_msg(self, msg):
         logger.info("parse_client_msg...")
-        logger.info(msg)
         # return
         '''
         {'tx_hash':tx_hash,'from':from_addr,'net_name':net_name,'status':response_status,
@@ -338,7 +338,7 @@ class Wallet(models.Model):
             path = response['path']
             response_status = response['status']
             gas = int(response['gas'])
-            gas_price = int(int(response['gas_price']))
+            gas_price =int(response['gas_price'])
             in_token = path[0]
             in_token_amount = response['in_token_amount']
             in_token_amount_with_slippage = response['in_token_amount_with_slippage']
@@ -348,17 +348,13 @@ class Wallet(models.Model):
             out_token = path[1]
             to_addr=response['to_addr']
             
-            logger.info("out_token_address")
-            logger.info(out_token);
             #chainnet setting.
             if to_addr != router_addr:
                 logger.info('msg not to pancake router')
                 return
             if response_status == 'pending':
-                logger.info('response status pending...');
                 # follow on pending
                 if DonorAddr.objects.filter(addr=from_addr, trade_on_confirmed=0).exists():
-                    logger.info('response status pending filter exists...');
                     donor = DonorAddr.objects.get(addr=from_addr, trade_on_confirmed=0)
                     logger.debug(f'new pending tx for donor: {from_addr}: {tx_hash}')
                     self.follow(donor, gas_price, path, in_token, in_token_amount, in_token_amount_with_slippage,
@@ -376,7 +372,7 @@ class Wallet(models.Model):
                     msg=f'limit order executed: token {limit_asset.asset.name}, side {limit_asset.type}, transaction {tx_hash}'
                     logger.info(msg)
                     self.send_msg_to_subscriber_tlg(msg)
-                    self.approve_if_not(limit_asset.asset)
+                    self.approve_if_not(limit_asset.asset,gas_price)
                     self.refresh_token_balance(token_id=limit_asset.asset.id)
                 # follow on confirmed
                 if DonorAddr.objects.filter(addr=from_addr, trade_on_confirmed=True).exists():
@@ -583,8 +579,6 @@ class Wallet(models.Model):
     def follow(self, donor: DonorAddr, donor_gas_price, donor_path, in_token, in_token_amount,
                in_token_amount_with_slippage, out_token, out_token_amount, out_token_amount_with_slippage, tx_hash,
                fee_support):
-        logger.info("follow net setting...")
-        logger.info(self.mainnet)
         if self.active == False:
             return
         if self.mainnet:
@@ -605,7 +599,7 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
-                self.approve_if_not(asset)
+                self.approve_if_not(asset,donor_gas_price)
             else:
                 decimals=Asset.objects.get(addr=out_token,decimals__isnull=False).decimals
             # check that this is not some kind of yusdt
@@ -669,10 +663,6 @@ class Wallet(models.Model):
                     follow_max = int(donor.follow_max)
                     if follow_max == 0:
                         follow_max = 10 ** 25
-                    logger.info("donnor eth value...")
-                    logger.info(donor_eth_value)
-                    logger.info(follow_min)
-                    logger.info(follow_max)
                     
                     if donor_eth_value >= follow_min and donor_eth_value <= follow_max:
 
@@ -716,7 +706,7 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
-                self.approve_if_not(asset)
+                self.approve_if_not(asset,donor_gas_price)
 
             if out_token in [i.addr for i in self.skip_tokens.all()]:
                 msg = f'donor is trying to sell token{in_token} for {out_token}, its in skip list, we wil sell it for wBNB directly'
@@ -936,7 +926,7 @@ class Wallet(models.Model):
                                   gas_price=None, gas=None, deadline=None, fee_support=True):
         #no matter what it is, just buy tokens
         try:
-            logger.info("swap_exact_token_to_token...")
+            logger.info("swap_exact_token_to_token donor : %s, in_token_amount : %d, min_out_token_amount : %d, gas_price : %d , fee_support: %s ",donor,in_token_amount,min_out_token_amount,gas_price,fee_support )
             hex_tx=None
             # we always pass it to the follower argument, he needs to assign the correct keys so that he can trade from this account
 

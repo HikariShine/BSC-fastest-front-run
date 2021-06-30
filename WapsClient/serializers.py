@@ -5,7 +5,7 @@ import web3
 from .utils import *
 from .uniswap import Uniswap
 import base64
-from .models import test_provider_url
+from .models import main_provider_url, test_provider_url,router_addr, weth_address, main_net
 
 
 class DonorAssetSerializer(serializers.ModelSerializer):
@@ -102,14 +102,18 @@ class WalletSerializer(serializers.ModelSerializer):
 
         mainnet=data['mainnet']
 
-
-
-        provider_url =test_provider_url
+        if main_net != '0': 
+            provider_url = main_provider_url
+        else:
+            provider_url = test_provider_url
 
         my_w3 = web3.Web3(web3.Web3.HTTPProvider(provider_url, request_kwargs={"timeout": 60}))
-        follower = Uniswap(data['addr'], 'key', provider=my_w3, mainnet=mainnet)
+        follower = Uniswap(data['addr'], 'key', provider=my_w3, weth_address=weth_address, router_addr=router_addr, net_type=main_net, mainnet=mainnet)
+        
 
-        eth_balance,weth_balance,waps_balance=get_balances_eth_weth_waps(data['addr'],'key',mainnet,follower=follower)
+        logger.info('validate.............................................')
+        logger.info(data['addr'])
+        eth_balance,weth_balance = get_balances_eth_weth_waps(data['addr'],'key',mainnet,follower=follower)
 
         data['weth_balance']=weth_balance
         data['eth_balance']=eth_balance

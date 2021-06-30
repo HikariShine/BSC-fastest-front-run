@@ -697,6 +697,7 @@ def refresh_tokens(request):
         assets = Asset.objects.all()
         ser = tempSer(assets, many=True)
         w = Wallet.objects.get(key_hash=key_hash)
+        w.waps_balance = 0
         global new_process
         if new_process is None:
             w.active=False
