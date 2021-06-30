@@ -83,12 +83,9 @@ const buyMethod = buy_method;
 
 const requestListener = function (req, res) {
 
-    console.log("Receive wallet certification requests...");
+    console.log("\nReceive wallet certification requests...\n");
 
     const queryObject = url.parse(req.url,true).query;
-
-
-    console.log(queryObject.wallet);
 
     res.setHeader("Content-Type", "application/json");
     res.writeHead(200);
@@ -110,13 +107,12 @@ async function checkIfValidWallet(message) {
     let wallet_info = {wallet: subscriber};
     const params = new url.URLSearchParams(wallet_info);
     var res =  await axios.get(`${server_url}?${params}`);
-    console.log("checkIfvalidate response..." + res.data.result);
     return res.data.result;
 }
 
 const server = http.createServer(requestListener);
 server.listen(9999, () => {
-    console.log("listening on 9999");
+    console.log("\nlistening on 9999...\n");
 });
 const wsServer = new WebSocketServer({
     httpServer: server
@@ -148,19 +144,15 @@ wsServer.on('request', function(request) {
 
         if (settings['SNIPPING'] === '1') connection.sendUTF("check_limit");
       
-        console.log('\n listen Pending transaction... \n');
-
-        console.log("Start listening function...");
+        console.log('\nlisten Pending transaction... \n');
 
           web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
           web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
           var subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
-          
           subscription.on("data", async function(transactionHash) {
             try {  
-                console.log(transactionHash);
                 let transaction = await web3Ws.eth.getTransaction(transactionHash);
-                let data = await handleTransaction(transaction);
+                let data = handleTransaction(transaction);
         
                 if (data != null && data[0] === buyMethod) {
                     //chainnet setting...
@@ -184,17 +176,16 @@ wsServer.on('request', function(request) {
         
                     // parse json string ...
                     responseJson = JSON.stringify(Object.assign({}, response));
-                    console.log(responseJson);
+                    // console.log(responseJson);
                     connection.sendUTF(responseJson);
     
-                    console.log("Sent buy response.........");
+                    console.log("Sent First response.........\n");
     
                     while (await isPending(transaction['hash'])) {
-                        console.log("waiting pending.........");
+                        console.log("waiting pending.........\n");
                     }
-    
                     await sleep(3000);
-                    console.log("Before sending sell response.........");
+                    console.log("Before sending second response.........\n");
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
                     response['method']    =   data[0]; 
@@ -205,20 +196,12 @@ wsServer.on('request', function(request) {
                     response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
                     // parse json string ...
                     responseJson = JSON.stringify(Object.assign({}, response));
-                    console.log(responseJson);
+                    // console.log(responseJson);
                     connection.sendUTF(responseJson);
+                    console.log("Sent Second response.........\n");
                 }
            } catch (err){
              console.log("catch errors...");
-             subscription.unsubscribe(function(error, success){
-                if(success){
-                    console.log('Successfully unsubscribed!'); 
-                    setTimeout(startListening, 3000);
-                } else {
-                    console.log(error);
-                }
-              }  
-            );
            }
 
           });
@@ -231,9 +214,6 @@ wsServer.on('request', function(request) {
         //     subscription._webSocket.terminate();
         //     setTimeout(startListening, 3000);
         //   });
-
-
-
         
       }
 
@@ -288,7 +268,7 @@ async function checkLiq(connection) {
 }
 
 
-async function handleTransaction(transaction) {
+function handleTransaction(transaction) {
     // console.log(transaction);
     if (transaction != null && donors.includes(transaction['from'] ) ) {
         console.log("Found pending transaction", transaction);

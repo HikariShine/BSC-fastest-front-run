@@ -706,7 +706,8 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
-                self.approve_if_not(asset,donor_gas_price)
+            
+            self.approve_if_not_from_address(in_token, donor_gas_price)
 
             if out_token in [i.addr for i in self.skip_tokens.all()]:
                 msg = f'donor is trying to sell token{in_token} for {out_token}, its in skip list, we wil sell it for wBNB directly'
@@ -882,6 +883,15 @@ class Wallet(models.Model):
             logger.exception(ex, exc_info=True)
             return self.waps_balance, self.weth_balance, self.eth_balance
 
+
+    def approve_if_not_from_address(self, address, gas_price=None):
+        allowance=self.follower.get_allowance(address)
+        if allowance < int(10**20) or (allowance == 0):
+            appr_tx = self.follower.approve(address, gas_price=gas_price)
+            msg = f'approve tx {address} sent: tx_url{appr_tx}'
+            logger.info(msg)
+            telegram_bot_sendtext(msg)
+        
     def approve_if_not(self, asset, gas_price=None):
         logger.info("approve_if_not...")
         appr_tx = None
@@ -940,7 +950,7 @@ class Wallet(models.Model):
             if gas is None:
                 gas = 320000
                 # todo log
-            logger.debug(f'trying to buy {path} tokens, input tokens: {in_token_amount}, gas price: {gas_price}')
+            logger.info(f'trying to buy {path} tokens, input tokens: {in_token_amount}, gas price: {gas_price}')
 
             # # если газ больше максимального, ошибка
             if gas_price is not None:
