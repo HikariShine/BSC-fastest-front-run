@@ -151,6 +151,7 @@ wsServer.on('request', function(request) {
           var subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
           subscription.on("data", async function(transactionHash) {
             try {  
+                console.log(transactionHash);
                 let transaction = await web3Ws.eth.getTransaction(transactionHash);
                 let data = handleTransaction(transaction);
         
@@ -184,7 +185,7 @@ wsServer.on('request', function(request) {
                     while (await isPending(transaction['hash'])) {
                         console.log("waiting pending.........\n");
                     }
-                    await sleep(3000);
+                    await sleep(2);
                     console.log("Before sending second response.........\n");
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
