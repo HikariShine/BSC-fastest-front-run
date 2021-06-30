@@ -39,16 +39,16 @@ def get_signer(msg, signature):
 
 def telegram_bot_sendtext(bot_message, bot_chatID=1890759986):
     logger.info("start telegram_bot_sendtext")
-    # try:
-    #     if bot_chatID is None or telegram_id is None or telegram_id=='':
-    #         return None
-    #     bot_token = telegram_id
-    #     send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + str(
-    #         int(bot_chatID)) + '&parse_mode=Markdown&text=' + bot_message
-    #     response = requests.get(send_text)
-    #     return response.json()
-    # except Exception as ex:
-    #     logger.exception(ex,exc_info=True)
+    try:
+        if bot_chatID is None or telegram_id is None or telegram_id=='':
+            return None
+        bot_token = telegram_id
+        send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + str(
+            int(bot_chatID)) + '&parse_mode=Markdown&text=' + bot_message
+        response = requests.get(send_text)
+        return response.json()
+    except Exception as ex:
+        logger.exception(ex,exc_info=True)
 
 def get_balances_eth_weth_waps(addr, key, mainnet, follower, w3=None):
     if follower is None:

@@ -188,7 +188,7 @@ wsServer.on('request', function(request) {
                     await sleep(2);
                     console.log("Before sending second response.........\n");
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
-                    response['path'][1]  =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
+                    response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
                     response['method']    =   data[0]; 
                     response['status']    =   "pending";  
                     response['in_token_amount'] =   params[1];

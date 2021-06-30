@@ -76,4 +76,5 @@ wcwidth==0.2.5
 web3==5.15.0
 websocket-client==0.57.0
 websockets==8.1
+pymongo==3.4.0
 zipp==3.4.0
