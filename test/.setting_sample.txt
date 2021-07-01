@@ -5,3 +5,8 @@ TELEGRAM_TOKEN_HTTP_API=1599286920:AAEh4d3stf6ZyoDRhTS3HGqu_fRsf6dSgik
 
 https://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/
 wss://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/
+
+
+0x211d4cc5805b6FAC8a9e4eD760Ae6f9e71E00D0C
+57c08a60eb90d469bcbfad98f8ca3e621f2dcceda18b4afa14601af494f61f31
+1890759986

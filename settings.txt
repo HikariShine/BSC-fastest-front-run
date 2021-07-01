@@ -1,5 +1,5 @@
-ADDR=0x211d4cc5805b6FAC8a9e4eD760Ae6f9e71E00D0C
-KEY=57c08a60eb90d469bcbfad98f8ca3e621f2dcceda18b4afa14601af494f61f31
+ADDR=0x094C05E16543d97Ef684c31DC586d0B7118EEcAA
+KEY=01c5d6b26be83c707dae0a43fa9cd6670958c577102dad6f15fcbcbcef6e2a3b
 HTTP_NODE=https://dawn-shy-voice.bsc.quiknode.pro/f929e892df513a1ad658ca2046aec0768f3817e5/
 WSS_NODE=wss://dawn-shy-voice.bsc.quiknode.pro/f929e892df513a1ad658ca2046aec0768f3817e5/
 HTTP_NODE_TEST=https://quiet-lingering-pond.kovan.quiknode.pro/2124f88767ca59a449af38625328bcdb2d4b14a9/
