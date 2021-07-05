@@ -194,7 +194,7 @@ class Uniswap():
 
         b_tx = tx.buildTransaction({'from': self.addr, 'gas': gas,
                                     'gasPrice': gas_price,
-                                    'nonce': self.provider.eth.getTransactionCount(self.addr),
+                                    'nonce': self.provider.eth.getTransactionCount(self.addr,"pending"),
                                     })
         return b_tx
 

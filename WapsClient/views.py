@@ -780,6 +780,7 @@ def start_stop(request):
             except:
                 pass
             new_process = None
+        
         # ws.connected = True
         # ws.connect("ws://127.0.0.1:8001/ws/chat/qwe/")
         # ws.send(json.dumps({'message': 'run'}))
@@ -790,6 +791,10 @@ def start_stop(request):
     return JsonResponse({'active': w.active}, status=status.HTTP_200_OK)
 
 
+async def sendStop():
+   uri =  f"ws://localhost:9999/"
+   async with websockets.connect(uri) as ws:
+      await ws.send(json.dumps({'msg': "stop"})) 
 
 
 def socket():
