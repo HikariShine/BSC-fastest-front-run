@@ -1,0 +1,37 @@
+Good morning, I know you are away. I found some instructions for the bot.
+
+CryptoJ I MIGHT DM YOU, [03.07.21 09:49]
+How to use FollowSwaps bot local version with limit orders(UPDATED 19/03/21)
+Video setup 👇👇
+https://www.youtube.com/watch?v=9veHHDmYHS8
+
+Read carefully
+*Every wallet changes, swaps etc. will be notified to you via Telegram
+1)Download the latest bot version
+https://github.com/FollowSwaps/
+2)unpack and open a settings file
+3)copy/paste wallet address, key and infura ID
+👉How to get infura id:
+https://blog.infura.io/getting-started-with-infura-28e41844cc89/
+4)copy/paste HTTP_APi (from @botfather)
+a)go to telegram and search for @BotFather
+b)press new bot, any name and user name b 
+c)save the settings file
+
+5)open file "start" to run the bot and go to 127.0.0.1:8000 in your web browser
+6)Fill in all the fields, including telegram ID and click "connect wallet."
+a) Go to telegram and click create a new channel (private channel)
+b) invite a bot created before (in step 4) to your channel and make him an admin
+c) the Easiest way to get a telegram ID is to forward any message to the @userinfobot bot from your new channel
+7) Prepare your ERC20 wallet
+a)You need to add 80% WETH  (for swaps) and 20% ETH (to pay gas fees)
+
+[17:09:43] 2-SCU: c)You need to approve spending WETH (press approve WETH on the main bot page once)
+8)Click the "Run" bot
+
+Bot buying tokens for WETH only.
+Bot selling token for WETH or for another token (if donor selling for another token) Token-Token
+If (same) donor buying the same token several times, we only buying once
+Make sure you have enough ETH to cover gas fees.
+Do not front-run smart contracts. You spend a lot on gas and will be disappointed.
+Any issues DM @brentox
