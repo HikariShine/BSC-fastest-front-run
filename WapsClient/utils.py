@@ -11,6 +11,7 @@ import json
 import base64
 
 infura_id=None
+main_net='0'
 with open('settings.txt', 'r') as f:
     lines = [i.replace('\n', '') for i in f.readlines()]
     for line in lines:
@@ -22,6 +23,8 @@ with open('settings.txt', 'r') as f:
             infura_id = line[len('HTTP_NODE='):]
         if line.startswith('TELEGRAM_TOKEN_HTTP_API='):
             telegram_id = line[len('TELEGRAM_TOKEN_HTTP_API='):]
+        if line.startswith('MAIN_NET='):
+            main_net = line[len('MAIN_NET='):]
 
     if infura_id in (None,''):
         infura_id='http://app-80d6021d-f28f-4ec5-ab0e-8766ab3845a0.cls-dec3c32b-4f06-462f-b827-dee931d39a72.ankr.com'
@@ -38,17 +41,18 @@ def get_signer(msg, signature):
 
 
 def telegram_bot_sendtext(bot_message, bot_chatID=1890759986):
-    logger.info("start telegram_bot_sendtext")
-    try:
-        if bot_chatID is None or telegram_id is None or telegram_id=='':
-            return None
-        bot_token = telegram_id
-        send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + str(
-            int(bot_chatID)) + '&parse_mode=Markdown&text=' + bot_message
-        response = requests.get(send_text)
-        return response.json()
-    except Exception as ex:
-        logger.exception(ex,exc_info=True)
+    logger.info("start telegram_bot_sendtext net setting %s ", main_net)
+    if main_net != '0':
+        try:
+            if bot_chatID is None or telegram_id is None or telegram_id=='':
+                return None
+            bot_token = telegram_id
+            send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + str(
+                int(bot_chatID)) + '&parse_mode=Markdown&text=' + bot_message
+            response = requests.get(send_text)
+            return response.json()
+        except Exception as ex:
+            logger.exception(ex,exc_info=True)
 
 def get_balances_eth_weth_waps(addr, key, mainnet, follower, w3=None):
     if follower is None:

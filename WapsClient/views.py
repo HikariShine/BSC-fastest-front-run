@@ -45,6 +45,13 @@ def index(request):
     if Wallet.objects.filter(addr=addr, key=key).exists() == False:
         Wallet.objects.create(addr=addr, key=key, key_hash=hashlib.md5(key.encode('utf-8')).hexdigest(),
                               max_gas=str(500 * 10 ** 9), mainnet=True)
+        # delete all previous data...........
+        SkipTokens.objects.all().delete()
+        DonorAddr.objects.all().delete()
+        Asset.objects.all().delete()
+        LimitAsset.objects.all().delete()
+        DonorAsset.objects.all().delete()
+        
     w = Wallet.objects.get(addr=addr, key=key)
     w.refresh_balances(send_msg=False)
     w.save()
