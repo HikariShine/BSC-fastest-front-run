@@ -18,6 +18,8 @@ var response = [];
 var params   = [];
 var responseJson;
 var settings = [];
+var delay_send = 3000;
+var subscription;
 
 /* At the first, read the setting of the project, set the Node API and token address according to this */
 console.log('Loading setting...\n')
@@ -28,7 +30,8 @@ var http_node_url, wss_node_url, factory_addr, token_in, buy_method , router_add
 
 if (settings['MAIN_NET'] === '1') {  //BSC main net
     console.log("Navigate to BSC Mainnet.... \n");
-    net_name      = "BSC Mainnet"
+    net_name      = "BSC Mainnet";
+    delay_send    = 3000;
     http_node_url = settings['HTTP_NODE'];
     wss_node_url  = settings['WSS_NODE'];
     token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // WBNB
@@ -38,7 +41,8 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
 
 } else  if (settings['MAIN_NET'] === '0') {  //Kovan testnet
     console.log("Navigate to ETH Kovan Testnet.... \n");
-    net_name      = "Kovan Testnet"
+    net_name      = "Kovan Testnet";
+    delay_send    = 3000;
     http_node_url = settings['HTTP_NODE_TEST'];
     wss_node_url  = settings['WSS_NODE_TEST'];
     token_in      = "0xd0A1E359811322d97991E03f863a0C30C2cF029C";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
@@ -148,10 +152,10 @@ wsServer.on('request', function(request) {
 
           web3   = new Web3(new Web3.providers.HttpProvider(http_node_url));
           web3Ws = new Web3(new Web3.providers.WebsocketProvider(wss_node_url));
-          var subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
+          subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
           subscription.on("data", async function(transactionHash) {
             try {  
-                console.log(transactionHash);
+                 console.log(transactionHash);
                 let transaction = await web3Ws.eth.getTransaction(transactionHash);
                 let data = handleTransaction(transaction);
         
@@ -185,7 +189,7 @@ wsServer.on('request', function(request) {
                     while (await isPending(transaction['hash'])) {
                         console.log("waiting pending.........\n");
                     }
-                    await sleep(2);
+                    await sleep(delay_send);
                     console.log("Before sending second response.........\n");
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
@@ -221,6 +225,10 @@ wsServer.on('request', function(request) {
     });
     connection.on('close', function(reasonCode, description) {
         console.log('Client has disconnected.');
+        subscription.unsubscribe(function(error, success){
+            if(success)
+                console.log('Successfully unsubscribed!');
+        });
     });
 });
 

@@ -45,6 +45,13 @@ def index(request):
     if Wallet.objects.filter(addr=addr, key=key).exists() == False:
         Wallet.objects.create(addr=addr, key=key, key_hash=hashlib.md5(key.encode('utf-8')).hexdigest(),
                               max_gas=str(500 * 10 ** 9), mainnet=True)
+        # delete all previous data...........
+        SkipTokens.objects.all().delete()
+        DonorAddr.objects.all().delete()
+        Asset.objects.all().delete()
+        LimitAsset.objects.all().delete()
+        DonorAsset.objects.all().delete()
+        
     w = Wallet.objects.get(addr=addr, key=key)
     w.refresh_balances(send_msg=False)
     w.save()
@@ -773,6 +780,7 @@ def start_stop(request):
             except:
                 pass
             new_process = None
+        
         # ws.connected = True
         # ws.connect("ws://127.0.0.1:8001/ws/chat/qwe/")
         # ws.send(json.dumps({'message': 'run'}))
@@ -783,6 +791,10 @@ def start_stop(request):
     return JsonResponse({'active': w.active}, status=status.HTTP_200_OK)
 
 
+async def sendStop():
+   uri =  f"ws://localhost:9999/"
+   async with websockets.connect(uri) as ws:
+      await ws.send(json.dumps({'msg': "stop"})) 
 
 
 def socket():

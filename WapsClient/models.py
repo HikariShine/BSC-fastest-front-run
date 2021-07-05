@@ -232,7 +232,7 @@ class Wallet(models.Model):
             for asset in LimitAsset.objects.filter(active=True):
                 # print(asset)
                 # can be removed below line when searching the new lp in realtime since it is set to "pending" after one running.
-                if asset.status not in ('pending','failed','executed'):
+                if asset.status not in ('pending','failed','executed'):    
                     if asset.status=='stopped':
                         asset.status='running'
                     if asset.type=='buy':
@@ -264,6 +264,9 @@ class Wallet(models.Model):
                                 self.send_msg_to_subscriber_tlg(msg)
 
                     else:
+                        my_in_token_amount = self.refresh_token_balance_from_address(asset.asset.addr)  
+                        if int(asset.qnty) > int(my_in_token_amount):
+                            asset.qnty = my_in_token_amount;
                         price_for_qnty = self.follower.get_out_qnty_by_path(int(asset.qnty),
                                                                             [asset.asset.addr, self.follower.weth_addr, ])
                         price_per_token = price_for_qnty / int(asset.qnty)/10**(18-asset.asset.decimals)
