@@ -6,7 +6,28 @@ const url = require('url');
 const Web3 = require("web3");
 const ethers = require('ethers');
 const axios = require('axios');
-const server_url = "http://localhost:9999"
+const server_url = "http://localhost:9999";
+const firebase = require('firebase');
+
+
+/* Firebase Setting */
+
+var firebaseConfig = {
+    apiKey: "AIzaSyCHoJ_GOROnHp4w6v-iiLMWDEl05yxJC9A",
+    authDomain: "snipping-59560.firebaseapp.com",
+    projectId: "snipping-59560",
+    storageBucket: "snipping-59560.appspot.com",
+    messagingSenderId: "279280523396",
+    appId: "1:279280523396:web:61853cc401ea43cfcf8ad1",
+    measurementId: "G-95LNZ2RX97"
+  };
+
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+// const auth = firebase.auth();
+// const storage = firebase.storage();
+// const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
 
 /* client information */
 
@@ -26,7 +47,8 @@ console.log('Loading setting...\n')
 settings = LoadSettings();
 
 /* chainnet setting... */
-var http_node_url, wss_node_url, factory_addr, token_in, buy_method , router_addr, net_name;
+var http_node_url, wss_node_url, factory_addr, token_in, router_addr, net_name;
+var buy_method = [];
 
 if (settings['MAIN_NET'] === '1') {  //BSC main net
     console.log("Navigate to BSC Mainnet.... \n");
@@ -36,7 +58,8 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     wss_node_url  = settings['WSS_NODE'];
     token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // WBNB
     factory_addr  = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";     //  (v2 router)
-    buy_method    = "0x7ff36ab5";                                     //  (v2 router) same in Ether and BSC
+    buy_method[0] = "0x7ff36ab5";    
+    buy_method[1] = "0xb6f9de95";                                     //  (v2 router) same in Ether and BSC
     router_addr   = "0x10ED43C718714eb63d5aA57B78B54704E256024E"      // router address (v2 router)
 
 } else  if (settings['MAIN_NET'] === '0') {  //Kovan testnet
@@ -47,7 +70,8 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     wss_node_url  = settings['WSS_NODE_TEST'];
     token_in      = "0xd0A1E359811322d97991E03f863a0C30C2cF029C";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
     factory_addr  = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";     // same in the Eth mainnet, kovan, ... (v2 router)
-    buy_method    = "0x7ff36ab5";                                     // same in the ETH mainnet (v2 router)
+    buy_method[0] = "0x7ff36ab5";    
+    buy_method[1] = "0xb6f9de95";                                     // same in the ETH mainnet (v2 router)
     router_addr   = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"      // router address (v2 router)
 }
 
@@ -96,10 +120,10 @@ const requestListener = function (req, res) {
     
     if (wallets.includes(queryObject.wallet)){
         console.log(queryObject.wallet + " is allowed. Now waiting for snipping and front running....\n");
-        res.end(`{"result": true}`);
+        res.end(`{"result": "1"}`);
     } else {
         console.log(queryObject.wallet + " is not allowed. if you want to use it, please register into setting_wallet_list.txt\n");
-        res.end(`{"result": false}`);
+        res.end(`{"result": "0"}`);
     }
 
 };
@@ -111,12 +135,42 @@ async function checkIfValidWallet(message) {
     let wallet_info = {wallet: subscriber};
     const params = new url.URLSearchParams(wallet_info);
     var res =  await axios.get(`${server_url}?${params}`);
+    console.log("check if valid wallet : ");
+    console.log(res.data.result);
     return res.data.result;
 }
 
-const server = http.createServer(requestListener);
+async function checkWalletFromFirebase(message){
+    var string = String(message);
+    var parseObj = JSON.parse(string);
+    var subscriber = parseObj['msg']['subscriber'];
+    var isExists = false;
+    var snapshot = await database.ref('wallet/').once('value');
+    if (snapshot.exists) {
+        const newArray = snapshot.val();
+        if (newArray) {
+          Object.keys(newArray).map((key, index) => {
+            const value = newArray[key];
+            console.log(value.address);
+            if (value.address === subscriber) {
+               isExists = true;
+               return isExists;
+            }
+          })
+        }
+        return isExists;
+      }
+    return isExists;
+}
+
+const checkFirebase = async (message) => {
+    return await checkWalletFromFirebase(message);
+}
+
+
+const server = http.createServer();
 server.listen(9999, () => {
-    console.log("\nlistening on 9999...\n");
+    // console.log("\nlistening on 9999...\n");
 });
 const wsServer = new WebSocketServer({
     httpServer: server
@@ -126,21 +180,25 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-console.log('Checking Permitted Wallet address...\n');
+// console.log('Checking Permitted Wallet address...\n');
 
-wallets = processLineByLine();
+// wallets = processLineByLine();
 
+var allowed;
 
 wsServer.on('request', function(request) {
 
     const connection = request.accept(null, request.origin);
 
-    connection.on('message', function(message) {
+    connection.on('message', async function(message) {
 
-      if (!checkIfValidWallet(message.utf8Data)) {
+      allowed = await checkFirebase(message.utf8Data);
+       
+      if (allowed !== true) {
+        console.log ("Wallet is not allowed ...");
         connection.sendUTF("Failed__Your wallet is not allowed to be used...");
       } else {
-
+        console.log ("Wallet is allowed ...");
         console.log('Received Message:', message.utf8Data);
         donors.push.apply(donors, getDonors(message.utf8Data));
         // remove duplicates donors.
@@ -155,11 +213,11 @@ wsServer.on('request', function(request) {
           subscription = web3Ws.eth.subscribe("pendingTransactions", function(error, result) { })
           subscription.on("data", async function(transactionHash) {
             try {  
-                 console.log(transactionHash);
+                // console.log(transactionHash);
                 let transaction = await web3Ws.eth.getTransaction(transactionHash);
                 let data = handleTransaction(transaction);
         
-                if (data != null && data[0] === buyMethod) {
+                if (data != null && buyMethod.includes(data[0])) {
                     //chainnet setting...
                     params = data[1];
                     response['net_name']  =   net_name;
@@ -225,10 +283,12 @@ wsServer.on('request', function(request) {
     });
     connection.on('close', function(reasonCode, description) {
         console.log('Client has disconnected.');
-        subscription.unsubscribe(function(error, success){
-            if(success)
-                console.log('Successfully unsubscribed!');
-        });
+        if (allowed){
+            subscription.unsubscribe(function(error, success){
+                if(success)
+                    console.log('Successfully unsubscribed!');
+            });
+        }
     });
 });
 
@@ -396,7 +456,7 @@ function parseTx(input){
         params.push(param);
     }
 
-    if(method === buyMethod) {
+    if(buyMethod.includes(method)) {
         console.log("Buy transction...");
         params[7]=params[6];
         params[6]=params[5];
