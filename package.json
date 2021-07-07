@@ -52,9 +52,10 @@
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.3",
     "truffle": "^5.3.14",
+    "tsparticles": "^1.30.4",
     "use-socketio": "^2.1.0",
-    "web3": "1.2.1",
-    "websocket": "1.0.34"
+    "web3": "^1.2.1",
+    "websocket": "^1.0.34"
   },
   "scripts": {
     "start": "react-scripts start",
