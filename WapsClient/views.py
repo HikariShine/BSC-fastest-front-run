@@ -750,7 +750,7 @@ def start_stop(request):
         #             status=400)
 
         if w.follower.get_allowance(w.follower.weth_addr) < 10 ** 20:
-            return JsonResponse({'non_field_errors': ['Please approve wBNB on uniswap. The bot trade wBNB only.']},
+            return JsonResponse({'non_field_errors': ['Please approve wBNB on pancakeswap. The bot trade wBNB only.']},
                                 status=400)
 
     global new_process
