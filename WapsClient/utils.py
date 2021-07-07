@@ -49,8 +49,8 @@ def telegram_bot_sendtext(bot_message, bot_chatID=1890759986):
             bot_token = telegram_id
             send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + str(
                 int(bot_chatID)) + '&parse_mode=Markdown&text=' + bot_message
-            response = requests.get(send_text)
-            return response.json()
+            requests.get(send_text)
+            # return response.json()
         except Exception as ex:
             logger.exception(ex,exc_info=True)
 
