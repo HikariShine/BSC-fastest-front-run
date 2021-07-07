@@ -2096,7 +2096,7 @@ class GetWallet extends React.Component {
                     <li>Don't forget to press Run bot </li>
                     <li>If the current price field is blank - the bot is not working</li>
                     <li>If you want to market buy or sell, place a limit order but put a much smaller price to sell and a
-                    much higher price to buy. Order will be executed by the current market price on uniswap</li>
+                    much higher price to buy. Order will be executed by the current market price on pancakeswap</li>
                 </ul>
 
                 <h6>Any issues, contact us skype id  <a href="https://web.skype.com"><span style={{

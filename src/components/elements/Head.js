@@ -92,7 +92,7 @@ export default function Header(props) {
                     Set up yours!
                 </Typography>
                 <Typography variant="h5" align="center" color="text" paragraph>
-                    Bot is following the "donor" addresses and trading coins on Uniswap.
+                    Bot is following the "donor" addresses and trading coins on Pancakeswap.
 
                 </Typography>
 
