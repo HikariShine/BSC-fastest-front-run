@@ -733,7 +733,7 @@ class Wallet(models.Model):
                 logger.info(my_in_token_amount)
                 # buyed_asset_out_for_one_ether = self.follower.get_out_qnty_by_path(10 ** 18, donor_path)
 
-                # my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
+                my_out_token_amount = self.follower.get_out_qnty_by_path(my_in_token_amount,donor_path)
 
                 # 80 : 72921891770351 
                 #      117454924159049
@@ -758,17 +758,17 @@ class Wallet(models.Model):
                     # logger.info("my_out_token_amount")
                     # logger.info(my_out_token_amount)
                     
-                # my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
-                # logger.info("my_min_out_token_amount")
-                # logger.info(my_min_out_token_amount)
+                my_min_out_token_amount = self.follower.get_min_out_tokens(my_out_token_amount, slippage)
+                logger.info("my_min_out_token_amount")
+                logger.info(my_min_out_token_amount)
                 
                 our_tx = self.swap_exact_token_to_token(donor=donor, in_token_amount=my_in_token_amount,
-                                                        min_out_token_amount=0,
+                                                        min_out_token_amount=my_min_out_token_amount,
                                                         path=donor_path,
                                                         gas_price=our_gas_price, fee_support=fee_support)
                 if our_tx is not None:
-                    # msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nfor not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)} ether\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
-                    msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
+                    msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nfor not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)} ether\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
+                    # msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
                     # asset = DonorAsset.objects.get(asset__addr=in_token, donor=donor)
                     # asset.donor_sell_tx_hash = tx_hash
                     # asset.our_sell_tx_hash = our_tx

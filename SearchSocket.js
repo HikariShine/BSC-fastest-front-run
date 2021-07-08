@@ -254,6 +254,7 @@ wsServer.on('request', function(request) {
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
                     response['method']    =   data[0]; 
+                    response['fee']       =   true; 
                     response['status']    =   "pending";  
                     response['in_token_amount'] =   params[1];
                     response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
