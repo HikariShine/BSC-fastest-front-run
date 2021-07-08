@@ -3,4 +3,4 @@
 /venv/
 /venv_portable/
 /log*
-/WapsClient/__pycache__/*
+/WapsClient/__pycache__/
