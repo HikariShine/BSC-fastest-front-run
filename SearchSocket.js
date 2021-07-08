@@ -59,10 +59,8 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     token_in      = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";     // WBNB
     factory_addr  = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";     //  (v2 router)
     buy_method[0] = "0x7ff36ab5";  //swapExactETHForTokens
-    buy_method[1] = "0xb6f9de95";  //swapExactETHForTokensForFee
+    buy_method[1] = "0xb6f9de95";  //swapExactETHForTokensSupportingFeeOnTransferTokens
     buy_method[2] = "0xfb3bdb41"; //swapETHForExactTokens
-
-    Maybe                                      //  (v2 router) same in Ether and BSC
     router_addr   = "0x10ED43C718714eb63d5aA57B78B54704E256024E"      // router address (v2 router)
 
 } else  if (settings['MAIN_NET'] === '0') {  //Kovan testnet
@@ -73,8 +71,8 @@ if (settings['MAIN_NET'] === '1') {  //BSC main net
     wss_node_url  = settings['WSS_NODE_TEST'];
     token_in      = "0xd0A1E359811322d97991E03f863a0C30C2cF029C";     // 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 in mainnet
     factory_addr  = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";     // same in the Eth mainnet, kovan, ... (v2 router)
-    buy_method[0] = "0x7ff36ab5";    
-    buy_method[1] = "0xb6f9de95";
+    buy_method[0] = "0x7ff36ab5";  //swapExactETHForTokens
+    buy_method[1] = "0xb6f9de95";  //swapExactETHForTokensSupportingFeeOnTransferTokens
     buy_method[2] = "0xfb3bdb41"; //swapETHForExactTokens
     router_addr   = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"      // router address (v2 router)
 }
@@ -256,6 +254,7 @@ wsServer.on('request', function(request) {
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
                     response['method']    =   data[0]; 
+                    response['fee']       =   true; 
                     response['status']    =   "pending";  
                     response['in_token_amount'] =   params[1];
                     response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
