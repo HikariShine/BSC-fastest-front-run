@@ -12,6 +12,7 @@ import base64
 
 infura_id=None
 main_net='0'
+telegram_alarm='0'
 with open('settings.txt', 'r') as f:
     lines = [i.replace('\n', '') for i in f.readlines()]
     for line in lines:
@@ -25,6 +26,8 @@ with open('settings.txt', 'r') as f:
             telegram_id = line[len('TELEGRAM_TOKEN_HTTP_API='):]
         if line.startswith('MAIN_NET='):
             main_net = line[len('MAIN_NET='):]
+        if line.startswith('TELEGRAM_ALARM='):
+            telegram_alarm = line[len('TELEGRAM_ALARM='):]
 
     if infura_id in (None,''):
         infura_id='http://app-80d6021d-f28f-4ec5-ab0e-8766ab3845a0.cls-dec3c32b-4f06-462f-b827-dee931d39a72.ankr.com'
@@ -42,7 +45,7 @@ def get_signer(msg, signature):
 
 def telegram_bot_sendtext(bot_message, bot_chatID=1890759986):
     logger.info("start telegram_bot_sendtext net setting %s ", main_net)
-    if main_net != '0':
+    if telegram_alarm != '0':
         try:
             if bot_chatID is None or telegram_id is None or telegram_id=='':
                 return None
