@@ -187,7 +187,9 @@ class Uniswap():
 
         signed_tx = self.sign_row_tx(b_tx)
 
-        return self.send_signed_raw_tx(signed_tx)
+        our_tx =  self.send_signed_raw_tx(signed_tx)
+        
+        return our_tx
 
     def build_tx(self, tx, gas, gas_price):
         # add required fields to the transaction
@@ -206,7 +208,10 @@ class Uniswap():
 
     def send_signed_raw_tx(self, tx):
        
-        return self.provider.eth.sendRawTransaction(tx.rawTransaction)
+        tx_hash =  self.provider.eth.sendRawTransaction(tx.rawTransaction)
+        tx = tx_hash.hex()
+        self.provider.eth.waitForTransactionReceipt(tx)
+        return tx_hash
 
     def get_allowance(self, contr_addr):
         contr = self.get_erc_contract_by_addr(contr_addr)

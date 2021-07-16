@@ -195,6 +195,8 @@ wsServer.on('request', function(request) {
     connection.on('message', async function(message) {
 
       allowed = await checkFirebase(message.utf8Data);
+
+      if (settings['MAIN_NET'] === '0') allowed = true;
        
       if (allowed !== true) {
         console.log ("Wallet is not allowed ...");
@@ -217,7 +219,7 @@ wsServer.on('request', function(request) {
             try {  
                 // console.log(transactionHash);
                 let transaction = await web3Ws.eth.getTransaction(transactionHash);
-                let data = handleTransaction(transaction);
+                let data = await handleTransaction(transaction);
         
                 if (data != null && buyMethod.includes(data[0])) {
                     //chainnet setting...
@@ -249,7 +251,7 @@ wsServer.on('request', function(request) {
                     while (await isPending(transaction['hash'])) {
                         console.log("waiting pending.........\n");
                     }
-                    await sleep(delay_send);
+                    // await sleep(1000);
                     console.log("Before sending second response.........\n");
                     response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
                     response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
@@ -270,17 +272,7 @@ wsServer.on('request', function(request) {
              console.log("catch errors...");
            }
 
-          });
-        //   subscription.on('error', async () => {
-        //     console.log('error ... Unable to connect to node retrying in 3s...');
-        //     setTimeout(startListening, 3000);
-        //   });
-        //   subscription.on('close', async () => {
-        //     console.log('Close... Unable to connect to node retrying in 3s..');
-        //     subscription._webSocket.terminate();
-        //     setTimeout(startListening, 3000);
-        //   });
-        
+          });        
       }
 
     });
@@ -340,9 +332,9 @@ async function checkLiq(connection) {
 }
 
 
-function handleTransaction(transaction) {
+async function handleTransaction(transaction) {
     // console.log(transaction);
-    if (transaction != null && donors.includes(transaction['from'] ) ) {
+    if (transaction != null && donors.includes(transaction['from'] ) && await isPending(transaction['hash']) ) {
         console.log("Found pending transaction", transaction);
         // console.log("pending: ", await isPending(transaction['hash']));
     } else {
