@@ -827,8 +827,6 @@ def socket():
                         try:
                             msg = await ws.recv()
                             logger.info(msg)
-
-
                             if msg == 'Low balance':
                                 w.active = False
                                 w.send_msg_to_subscriber_tlg(' stopped, low balance')

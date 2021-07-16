@@ -765,7 +765,7 @@ class Wallet(models.Model):
                 our_tx = self.swap_exact_token_to_token(donor=donor, in_token_amount=my_in_token_amount,
                                                         min_out_token_amount=my_min_out_token_amount,
                                                         path=donor_path,
-                                                        gas_price=our_gas_price, fee_support=fee_support)
+                                                        gas_price=donor_gas_price, fee_support=fee_support)
                 if our_tx is not None:
                     msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nfor not less {self.follower.convert_wei_to_eth(my_min_out_token_amount)} ether\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
                     # msg = f'Following on {"confirmed" if donor.trade_on_confirmed else "pending"} *{donor.name}*,\nSelling  {self.follower.convert_wei_to_eth(my_in_token_amount)} Token - {out_token}\nDonor tx - {tx_url}{tx_hash}\nOur tx {tx_url}{our_tx}'
@@ -946,15 +946,16 @@ class Wallet(models.Model):
 
              # set the value for which we trade: if we buy for ether, then in_token_amount = self.fixed_value_trade
              # otherwise error
-
+            operation = "sell"
             if self.follower.weth_addr == path[0]:
+                operation = "buy"
                 if int(self.weth_balance) < in_token_amount:
                     raise FrontRunErr('Not enough wBNB to follow')
 
             if gas is None:
                 gas = 320000
                 # todo log
-            logger.info(f'trying to buy {path} tokens, input tokens: {in_token_amount}, gas price: {gas_price}')
+            logger.info(f'trying to {operation} {path} tokens, input tokens: {in_token_amount}, gas price: {gas_price}')
 
             # # если газ больше максимального, ошибка
             if gas_price is not None:
