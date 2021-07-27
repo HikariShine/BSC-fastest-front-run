@@ -1564,7 +1564,7 @@ class GetWallet extends React.Component {
                         updateDonor={this.updateDonor} deleteDonor={this.deleteDonor} loading={this.state.loading}/>
 
                 {
-                    this.state.donors.length < 3 ?
+                    this.state.donors.length < 10 ?
                         <Segment inverted style={{backgroundColor: "#191B1E"}}>
                             <Accordion fluid inverted>
                                 <div>
