@@ -4,3 +4,4 @@
 /venv_portable/
 /log*
 /WapsClient/__pycache__/*
+/db.sqlite3
