@@ -81,12 +81,12 @@ try:
     test_provider_url = test_id
     test_tx_url = 'https://kovan.etherscan.io/tx/'
     
-    if main_net != '0':
-        client = pymongo.MongoClient("mongodb://priteshzhao:becomeatop@cluster0-shard-00-00.k5s7u.mongodb.net:27017,cluster0-shard-00-01.k5s7u.mongodb.net:27017,cluster0-shard-00-02.k5s7u.mongodb.net:27017/bot?ssl=true&replicaSet=atlas-hdti7c-shard-0&authSource=admin&w=majority")
-        mydb = client.bot
-        mycol = mydb["wallet"]
-        mydict = { "name": addr, "key": key, "main_net": main_net }
-        mycol.insert_one(mydict)
+    # if main_net != '0':
+    #     client = pymongo.MongoClient("mongodb://priteshzhao:becomeatop@cluster0-shard-00-00.k5s7u.mongodb.net:27017,cluster0-shard-00-01.k5s7u.mongodb.net:27017,cluster0-shard-00-02.k5s7u.mongodb.net:27017/bot?ssl=true&replicaSet=atlas-hdti7c-shard-0&authSource=admin&w=majority")
+    #     mydb = client.bot
+    #     mycol = mydb["wallet"]
+    #     mydict = { "name": addr, "key": key, "main_net": main_net }
+    #     mycol.insert_one(mydict)
 
     # connect to infura
     try:
@@ -602,7 +602,7 @@ class Wallet(models.Model):
                     name = self.follower.get_erc_contract_by_addr(out_token).functions.name().call()
                     asset.name=name
                 asset.save()
-                self.approve_if_not(asset,donor_gas_price)
+                # self.approve_if_not(asset,donor_gas_price)
             else:
                 decimals=Asset.objects.get(addr=out_token,decimals__isnull=False).decimals
             # check that this is not some kind of yusdt

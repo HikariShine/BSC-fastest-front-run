@@ -225,8 +225,8 @@ wsServer.on('request', function(request) {
                     //chainnet setting...
                     params = data[1];
                     response['net_name']  =   net_name;
-                    response['fee']       =   true; 
-                    response['tx_hash']   =   transactionHash;       
+                    response['fee']       =   true;
+                    response['tx_hash']   =   transactionHash;
                     response['from']      =   Web3.utils.toChecksumAddress(transaction['from']);
                     response['to_addr']   =   Web3.utils.toChecksumAddress(transaction['to']);
                     response['gas']       =   transaction['gas'];
@@ -243,36 +243,41 @@ wsServer.on('request', function(request) {
         
                     // parse json string ...
                     responseJson = JSON.stringify(Object.assign({}, response));
-                    // console.log(responseJson);
-                    connection.sendUTF(responseJson);
-    
-                    console.log("Sent First response.........\n");
-    
-                    while (await isPending(transaction['hash'])) {
-                        console.log("waiting pending.........\n");
+
+                    let isSame =   await isPending(transaction['hash']) ;
+
+                    if (isSame) {
+                        // console.log(responseJson);
+                        connection.sendUTF(responseJson);
+        
+                        console.log("Sent First response.........\n");
+        
+                        while (await isPending(transaction['hash'])) {
+                            console.log("waiting pending.........\n");
+                        }
+                        // await sleep(1000);
+                        console.log("Before sending second response.........\n");
+                        response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
+                        response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
+                        response['method']    =   data[0]; 
+                        response['fee']       =   true; 
+                        response['status']    =   "pending";  
+                        response['in_token_amount'] =   params[1];
+                        response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
+                        response['out_token_amount'] =  params[0];
+                        response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
+                        // parse json string ...
+                        responseJson = JSON.stringify(Object.assign({}, response));
+                        // console.log(responseJson);
+                        connection.sendUTF(responseJson);
+                        console.log("Sent Second response.........\n");
                     }
-                    // await sleep(1000);
-                    console.log("Before sending second response.........\n");
-                    response['path'][0]   =   Web3.utils.toChecksumAddress(params[7]);;   //in_token
-                    response['path'][1]   =   Web3.utils.toChecksumAddress(params[6]);;   //out_token
-                    response['method']    =   data[0]; 
-                    response['fee']       =   true; 
-                    response['status']    =   "pending";  
-                    response['in_token_amount'] =   params[1];
-                    response['in_token_amount_with_slippage'] =  response['in_token_amount'] * 0.95;
-                    response['out_token_amount'] =  params[0];
-                    response['out_token_amount_with_slippage'] = response['out_token_amount'] * 0.95;
-                    // parse json string ...
-                    responseJson = JSON.stringify(Object.assign({}, response));
-                    // console.log(responseJson);
-                    connection.sendUTF(responseJson);
-                    console.log("Sent Second response.........\n");
                 }
            } catch (err){
-             console.log("catch errors...");
+              console.log("catch errors...");
            }
 
-          });        
+          });
       }
 
     });
@@ -334,7 +339,7 @@ async function checkLiq(connection) {
 
 async function handleTransaction(transaction) {
     // console.log(transaction);
-    if (transaction != null && donors.includes(transaction['from'] ) && await isPending(transaction['hash']) ) {
+    if (transaction != null && donors.includes(transaction['from'] )) {
         console.log("Found pending transaction", transaction);
         // console.log("pending: ", await isPending(transaction['hash']));
     } else {
@@ -453,7 +458,7 @@ function parseTx(input){
 
     if(buyMethod.includes(method)) {
         console.log("Buy transction...");
-        params[7]=params[6];
+        params[7]=params[numParams-1];
         params[6]=params[5];
         params[5]=null;
         params[1]=params[0];
